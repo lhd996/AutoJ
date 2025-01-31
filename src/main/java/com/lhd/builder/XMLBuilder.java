@@ -1,6 +1,7 @@
 package com.lhd.builder;
 
 import com.lhd.bean.Constants;
+import com.lhd.bean.ExtendField;
 import com.lhd.bean.FieldInfo;
 import com.lhd.bean.TableInfo;
 import com.lhd.utils.StringTools;
@@ -166,21 +167,69 @@ public class XMLBuilder {
         bw.write("\t\t<where>");
         bw.newLine();
 
+        // 生成查询条件
         StringBuilder sb = new StringBuilder();
+        StringBuilder sb1 = new StringBuilder();
         for (FieldInfo fieldInfo : tableInfo.getFieldList()) {
             String partCondition = "";
             if ("String".equals(fieldInfo.getJavaType())){
                 partCondition = String.format(" and query.%s != ''",fieldInfo.getPropertyName());
             }
-            sb.append(String.format("\t\t\t<if test = \"query.%s != null%s\">",fieldInfo.getPropertyName(),partCondition));
+            sb.append(String.format("\t\t\t<if test=\"query.%s != null%s\">",fieldInfo.getPropertyName(),partCondition));
             sb.append("\n");
             sb.append(String.format("\t\t\t\tand %s.%s = #{query.%s}",alias,fieldInfo.getFieldName(),fieldInfo.getPropertyName()));
             sb.append("\n");
             sb.append("\t\t\t</if>");
             sb.append("\n");
+
+            // 额外查询条件
+            Set<Map.Entry<String, List<ExtendField>>> entries = tableInfo.getExtendFieldMap().entrySet();
+            for (Map.Entry<String, List<ExtendField>> entry : entries) {
+                if (entry.getKey().equals(fieldInfo.getPropertyName())){
+                    if ("String".equals(fieldInfo.getJavaType())){
+                        sb1.append(String.format("\t\t\t<if test=\"query.%s!= null  and query.%s!=''\">\n" +
+                                "\t\t\t\tand %s.%s like concat('%s', #{query.%s}, '%s')\n" +
+                                "\t\t\t</if>\n",
+                                entry.getValue().get(0).getFieldName(),
+                                entry.getValue().get(0).getFieldName(),
+                                alias,
+                                tableInfo.getTableName(),
+                                "%",
+                                entry.getValue().get(0).getFieldName(),
+                                "%"));
+                    }
+                    if ("Date".equals(fieldInfo.getJavaType())){
+                        sb1.append(String.format("\t\t\t<if test=\"query.%s!= null and query.%s!=''\">\n" +
+                                "\t\t\t\t<![CDATA[ and  %s.%s>=str_to_date(#{query.%s}, '%sY-%sm-%sd') ]]>\n" +
+                                "\t\t\t</if>\n",
+                                entry.getValue().get(0).getFieldName(),
+                                entry.getValue().get(0).getFieldName(),
+                                alias,
+                                tableInfo.getTableName(),
+                                entry.getValue().get(0).getFieldName(),
+                                "%",
+                                "%",
+                                "%"));
+                        sb1.append(String.format("\t\t\t<if test=\"query.%s!= null and query.%s!=''\">\n" +
+                                        "\t\t\t\t<![CDATA[ and  %s.%s<str_to_date(#{query.%s}, '%sY-%sm-%sd') ]]>\n" +
+                                        "\t\t\t</if>\n",
+                                entry.getValue().get(1).getFieldName(),
+                                entry.getValue().get(1).getFieldName(),
+                                alias,
+                                tableInfo.getTableName(),
+                                entry.getValue().get(1).getFieldName(),
+                                "%",
+                                "%",
+                                "%"));
+                    }
+
+                }
+            }
         }
 
+
         bw.write(sb.toString());
+        bw.write(sb1.toString());
 
         bw.write("\t\t</where>");
         bw.newLine();
