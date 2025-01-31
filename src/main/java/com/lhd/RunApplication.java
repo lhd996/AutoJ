@@ -1,9 +1,13 @@
 package com.lhd;
 
+import com.lhd.bean.ExtendField;
 import com.lhd.bean.TableInfo;
 import com.lhd.builder.*;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Author: liuhd

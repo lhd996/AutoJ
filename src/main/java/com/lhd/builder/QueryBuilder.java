@@ -1,13 +1,17 @@
 package com.lhd.builder;
 
 import com.lhd.bean.Constants;
+import com.lhd.bean.ExtendField;
 import com.lhd.bean.FieldInfo;
 import com.lhd.bean.TableInfo;
+import com.lhd.utils.StringTools;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @Author: liuhd
@@ -53,17 +57,13 @@ public class QueryBuilder {
                 bw.write("\tprivate " + fieldInfo.getJavaType() + " " + fieldInfo.getPropertyName() + ";");
                 bw.newLine();
                 bw.newLine();
-                // 如果是字符串类型的 那么需要加上对应的模糊匹配字段
-                if ("String".equals(fieldInfo.getJavaType())){
-                    bw.write("\tprivate " + fieldInfo.getJavaType() + " " + fieldInfo.getPropertyName() + "Fuzzy;");
+            }
+            for (Map.Entry<String, List<ExtendField>> entry : tableInfo.getExtendFieldMap().entrySet()) {
+                List<ExtendField> extendFieldList = entry.getValue();
+                for (ExtendField extendField : extendFieldList) {
+                    CommentBuilder.buildFieldComment(bw, entry.getKey() + "扩展字段");
+                    bw.write("\tprivate " + extendField.getFieldType() + " " + extendField.getFieldName() + ";");
                     bw.newLine();
-                    bw.newLine();
-                }
-                // 如果是Date类型的 那么需要加上对应的开始与结束字段 用于查询时间范围内的记录
-                if ("Date".equals(fieldInfo.getJavaType())){
-                    bw.write("\tprivate String " + fieldInfo.getPropertyName() + "Start;");
-                    bw.newLine();
-                    bw.write("\tprivate String " + fieldInfo.getPropertyName() + "End;");
                     bw.newLine();
                 }
             }
@@ -72,7 +72,7 @@ public class QueryBuilder {
             for (FieldInfo fieldInfo : tableInfo.getFieldList()) {
                 String propertyName = fieldInfo.getPropertyName();
                 // getter
-                String get = "\tpublic " + fieldInfo.getJavaType() + " get" + propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1) + "() {";
+                String get = "\tpublic " + fieldInfo.getJavaType() + " get" + StringTools.UpperHead(propertyName,1) + "() {";
                 bw.write(get);
                 bw.newLine();
                 bw.write("\t\treturn " + fieldInfo.getPropertyName() + ";");
@@ -80,39 +80,8 @@ public class QueryBuilder {
                 bw.write("\t}");
                 bw.newLine();
                 bw.newLine();
-                // 如果是String类型 为其Fuzzy也生成get
-                if ("String".equals(fieldInfo.getJavaType())){
-                    get = "\tpublic " + fieldInfo.getJavaType() + " get" + propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1) + "Fuzzy() {";
-                    bw.write(get);
-                    bw.newLine();
-                    bw.write("\t\treturn " + fieldInfo.getPropertyName() + "Fuzzy;");
-                    bw.newLine();
-                    bw.write("\t}");
-                    bw.newLine();
-                    bw.newLine();
-                }
-                // 如果是Date类型 为其start与end也生成get
-                if ("Date".equals(fieldInfo.getJavaType())){
-                    get = "\tpublic String" + " get" + propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1) + "Start() {";
-                    bw.write(get);
-                    bw.newLine();
-                    bw.write("\t\treturn " + fieldInfo.getPropertyName() + "Start;");
-                    bw.newLine();
-                    bw.write("\t}");
-                    bw.newLine();
-                    bw.newLine();
-
-                    get = "\tpublic String" + " get" + propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1) + "End() {";
-                    bw.write(get);
-                    bw.newLine();
-                    bw.write("\t\treturn " + fieldInfo.getPropertyName() + "End;");
-                    bw.newLine();
-                    bw.write("\t}");
-                    bw.newLine();
-                    bw.newLine();
-                }
                 // setter
-                String set = "\tpublic " + "void" + " set" + propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1) + String.format("(%s %s)", fieldInfo.getJavaType(), propertyName) + " {";
+                String set = "\tpublic " + "void" + " set" + StringTools.UpperHead(propertyName,1) + String.format("(%s %s)", fieldInfo.getJavaType(), propertyName) + " {";
                 bw.write(set);
                 bw.newLine();
                 bw.write("\t\t" + "this." + propertyName + " = " + propertyName + ";");
@@ -120,39 +89,30 @@ public class QueryBuilder {
                 bw.write("\t}");
                 bw.newLine();
                 bw.newLine();
-                // 如果是String类型 为其Fuzzy也生成set
-                if ("String".equals(fieldInfo.getJavaType())){
-                    set = "\tpublic " + "void" + " set" + propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1) + "Fuzzy" + String.format("(%s %s)", fieldInfo.getJavaType(), propertyName + "Fuzzy") + " {";
-                    bw.write(set);
+            }
+            for (Map.Entry<String, List<ExtendField>> entry : tableInfo.getExtendFieldMap().entrySet()) {
+                List<ExtendField> extendFieldList = entry.getValue();
+                for (ExtendField extendField : extendFieldList) {
+                    // getter
+                    String get = "\tpublic " + extendField.getFieldType() + " get" + StringTools.UpperHead(extendField.getFieldName(),1) + "() {";
+                    bw.write(get);
                     bw.newLine();
-                    bw.write("\t\t" + "this." + propertyName + "Fuzzy" + " = " + propertyName + "Fuzzy;");
-                    bw.newLine();
-                    bw.write("\t}");
-                    bw.newLine();
-                    bw.newLine();
-                }
-                // 如果是Date类型 为其start与end也生成get
-                if ("Date".equals(fieldInfo.getJavaType())){
-                    set = "\tpublic " + "void" + " set" + propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1) + "Start" + String.format("(%s %s)", "String", propertyName + "Start") + " {";
-                    bw.write(set);
-                    bw.newLine();
-                    bw.write("\t\t" + "this." + propertyName + "Start" + " = " + propertyName + "Start;");
+                    bw.write("\t\treturn " + extendField.getFieldName() + ";");
                     bw.newLine();
                     bw.write("\t}");
                     bw.newLine();
                     bw.newLine();
-
-                    set = "\tpublic " + "void" + " set" + propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1) + "End" + String.format("(%s %s)", "String", propertyName + "End") + " {";
+                    // setter
+                    String set = "\tpublic " + "void" + " set" + StringTools.UpperHead(extendField.getFieldName(),1) + String.format("(%s %s)", extendField.getFieldType(), extendField.getFieldName()) + " {";
                     bw.write(set);
                     bw.newLine();
-                    bw.write("\t\t" + "this." + propertyName + "End" + " = " + propertyName + "End;");
+                    bw.write("\t\t" + "this." + extendField.getFieldName() + " = " + extendField.getFieldName() + ";");
                     bw.newLine();
                     bw.write("\t}");
                     bw.newLine();
                     bw.newLine();
                 }
             }
-
 
 
             bw.write("}");

@@ -53,6 +53,16 @@ public class TableInfo {
      */
     private Boolean haveBigDecimal;
 
+    // 扩展字段 例如Fuzzy以及start end
+    private Map<String,List<ExtendField>> extendFieldMap;
+
+    public Map<String, List<ExtendField>> getExtendFieldMap() {
+        return extendFieldMap;
+    }
+
+    public void setExtendFieldMap(Map<String, List<ExtendField>> extendFieldMap) {
+        this.extendFieldMap = extendFieldMap;
+    }
 
     public Boolean getHaveBigDecimal() {
         return haveBigDecimal;

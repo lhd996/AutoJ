@@ -1,6 +1,7 @@
 package com.lhd.builder;
 
 import com.lhd.bean.Constants;
+import com.lhd.bean.ExtendField;
 import com.lhd.bean.FieldInfo;
 import com.lhd.bean.TableInfo;
 import com.lhd.utils.PropertiesUtils;
@@ -79,6 +80,8 @@ public class TableBuilder {
                 setFieldInfo(tableInfo);
                 // 设置索引
                 setIndexInfo(tableInfo);
+                // 设置扩展字段
+                setExtendsField(tableInfo);
 
                 tableInfoList.add(tableInfo);
             }
@@ -112,6 +115,45 @@ public class TableBuilder {
         return tableInfoList;
     }
 
+    /**
+     * @description: 设置扩展字段
+     * @param tableInfo
+     * @return
+     * @author liuhd
+     * 2025/1/31 14:57
+     */
+    private static void setExtendsField(TableInfo tableInfo) {
+        Map<String, List<ExtendField>> map = new HashMap<>();
+        for (FieldInfo fieldInfo : tableInfo.getFieldList()) {
+            ArrayList<ExtendField> list = new ArrayList<>();
+            // String类型的扩展是Fuzzy
+            if ("String".equals(fieldInfo.getJavaType())){
+                ExtendField extendField = new ExtendField();
+                extendField.setFieldName(fieldInfo.getPropertyName() + "Fuzzy");
+                extendField.setFieldType("String");
+                list.add(extendField);
+                map.put(fieldInfo.getPropertyName(),list);
+            }
+            // Date类型的扩展是Start与End
+            if ("Date".equals(fieldInfo.getJavaType())){
+                ExtendField extendField1 = new ExtendField();
+                extendField1.setFieldName(fieldInfo.getPropertyName() + "Start");
+                extendField1.setFieldType("String");
+
+                ExtendField extendField2 = new ExtendField();
+                extendField2.setFieldName(fieldInfo.getPropertyName() + "End");
+                extendField2.setFieldType("String");
+
+                list.add(extendField1);
+                list.add(extendField2);
+
+                map.put(fieldInfo.getPropertyName(),list);
+            }
+            // 其他类型的扩展 。。。。
+        }
+
+        tableInfo.setExtendFieldMap(map);
+    }
     /**
      * @param fieldName   字段名
      * @param isTableName 是否是表名

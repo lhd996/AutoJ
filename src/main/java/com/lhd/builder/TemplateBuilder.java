@@ -123,8 +123,4 @@ public class TemplateBuilder {
             }
         }
     }
-
-    public static void main(String[] args) {
-        TemplateBuilder.execute();
-    }
 }
