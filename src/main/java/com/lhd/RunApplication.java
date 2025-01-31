@@ -18,6 +18,7 @@ public class RunApplication {
             PoBuilder.execute(tableInfo);
             QueryBuilder.execute(tableInfo);
             MapperBuilder.execute(tableInfo);
+            XMLBuilder.execute(tableInfo);
         }
     }
 }

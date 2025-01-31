@@ -58,7 +58,8 @@ public class Constants {
     public static String PATH_MAPPERS;
     // mappers类所在包
     public static String PACKAGE_MAPPERS;
-
+    // XML所在路径
+    public static String PATH_XML;
     // 作者名
     public static String AUTHOR;
     // 日期参数格式
@@ -108,6 +109,7 @@ public class Constants {
 
         PATH_MAPPERS = PATH_BASE + PATH_JAVA + PACKAGE_MAPPERS.replace(".","/");
 
+        PATH_XML = PATH_BASE + PATH_RESOURCES + PACKAGE_MAPPERS.replace(".","/");
 
         AUTHOR = PropertiesUtils.getString("author");
 
@@ -140,5 +142,6 @@ public class Constants {
         System.out.println(PATH_EXCEPTION);
         System.out.println(PATH_UTILS);
         System.out.println(PATH_MAPPERS);
+        System.out.println(PATH_XML);
     }
 }
