@@ -66,7 +66,8 @@ public class XMLBuilder {
             buildSelectCount(tableInfo,bw);
             // 构建insert方法
             buildInsert(tableInfo,bw);
-
+            // 构建insertOrUpdate方法
+            buildInsertOrUpdate(tableInfo,bw);
             bw.write("</mapper>");
 
             bw.flush();
@@ -84,7 +85,91 @@ public class XMLBuilder {
     }
 
     /**
-     * @description: 构建insert方法 只插入有值的部分
+     * @description: 插入或者更新 只插入或更新bean中有值的字段
+     * @param tableInfo
+     * @param bw
+     * @return
+     * @author liuhd
+     * 2025/2/2 20:11
+     */
+    private static void buildInsertOrUpdate(TableInfo tableInfo, BufferedWriter bw) throws IOException {
+
+        CommentBuilder.buildXMLFieldComment(bw,"插入或者更新 （只插入或更新bean中有值的字段）");
+        bw.write(String.format("\t<insert id=\"insertOrUpdate\" parameterType=\"%s.%s\">",
+                Constants.PACKAGE_PO,
+                tableInfo.getBeanName()));
+        bw.newLine();
+
+        // 寻找自增主键
+        FieldInfo autoIncrementField = null;
+        for (FieldInfo fieldInfo : tableInfo.getFieldList()) {
+            if (fieldInfo.getAutoIncrement()){
+                autoIncrementField = fieldInfo;
+                break;
+            }
+        }
+        if (autoIncrementField != null){
+            bw.write(String.format("\t\t<selectKey keyProperty=\"bean.%s\" resultType=\"%s\" order=\"AFTER\">\n" +
+                    "\t\t\tSELECT LAST_INSERT_ID()\n" +
+                    "\t\t</selectKey>",autoIncrementField.getPropertyName(),autoIncrementField.getJavaType()));
+            bw.newLine();
+        }
+
+        bw.write(String.format("\t\tINSERT INTO %s",tableInfo.getTableName()));
+        bw.newLine();
+
+        bw.write("\t\t<trim prefix=\"(\" suffix=\")\" suffixOverrides=\",\">");
+        bw.newLine();
+
+        for (FieldInfo fieldInfo : tableInfo.getFieldList()) {
+            bw.write(String.format("\t\t\t<if test=\"bean.%s != null\">\n" +
+                    "\t\t\t\t%s,\n" +
+                    "\t\t\t</if>",fieldInfo.getPropertyName(),fieldInfo.getFieldName()));
+            bw.newLine();
+        }
+
+        bw.write("\t\t</trim>");
+        bw.newLine();
+
+        bw.write("\t\tVALUES");
+        bw.newLine();
+
+        bw.write("\t\t<trim prefix=\"(\" suffix=\")\" suffixOverrides=\",\">");
+        bw.newLine();
+
+        for (FieldInfo fieldInfo : tableInfo.getFieldList()) {
+            bw.write(String.format("\t\t\t<if test=\"bean.%s != null\">\n" +
+                    "\t\t\t\t#{bean.%s},\n" +
+                    "\t\t\t</if>",fieldInfo.getPropertyName(),fieldInfo.getPropertyName()));
+            bw.newLine();
+        }
+
+        bw.write("\t\t</trim>");
+        bw.newLine();
+
+        bw.write("\t\ton DUPLICATE key update");
+        bw.newLine();
+
+        bw.write("\t\t<trim suffixOverrides=\",\">");
+        bw.newLine();
+
+        for (FieldInfo fieldInfo : tableInfo.getFieldList()) {
+            bw.write(String.format("\t\t\t<if test=\"bean.%s != null\">\n" +
+                    "\t\t\t\t%s = VALUES(%s),\n" +
+                    "\t\t\t</if>",fieldInfo.getPropertyName(),fieldInfo.getFieldName(),fieldInfo.getFieldName()));
+            bw.newLine();
+        }
+
+        bw.write("\t\t</trim>");
+        bw.newLine();
+
+        bw.write("\t</insert>");
+        bw.newLine();
+        bw.newLine();
+    }
+
+    /**
+     * @description: 构建insert方法 只插入bean有值的部分
      * @param tableInfo
      * @param bw
      * @return
@@ -92,7 +177,7 @@ public class XMLBuilder {
      * 2025/2/2 17:14
      */
     private static void buildInsert(TableInfo tableInfo, BufferedWriter bw) throws IOException {
-        CommentBuilder.buildXMLFieldComment(bw,"插入 （只插入有值的字段）");
+        CommentBuilder.buildXMLFieldComment(bw,"插入 （只插入bean中有值的字段）");
         bw.write(String.format("\t<insert id=\"insert\" parameterType=\"%s.%s\">",
                 Constants.PACKAGE_PO,
                 tableInfo.getBeanName()));
