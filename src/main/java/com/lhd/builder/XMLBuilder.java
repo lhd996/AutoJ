@@ -12,10 +12,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @Author: liuhd
@@ -28,6 +25,8 @@ public class XMLBuilder {
     private static final String BASE_RESULT_COLUMN = "base_result_column";
     private static final String BASE_QUERY_CONDITION = "base_query_condition";
 
+    private static FieldInfo autoIncrementField = null;
+
     private static String alias;
 
     public static void execute(TableInfo tableInfo) {
@@ -35,6 +34,15 @@ public class XMLBuilder {
         File folder = new File(Constants.PATH_XML);
         if (!folder.exists()) {
             folder.mkdirs();
+        }
+        // 找到自增字段
+        autoIncrementField = null;
+        for (FieldInfo fieldInfo : tableInfo.getFieldList()) {
+            if (fieldInfo.getAutoIncrement()) {
+                autoIncrementField = fieldInfo;
+                System.out.println(tableInfo.getTableName() + ":" + fieldInfo.getPropertyName());
+                break;
+            }
         }
         // xml名字
         String xmlName = tableInfo.getBeanName() + Constants.MAPPER_BEAN_SUFFIX;
@@ -59,17 +67,19 @@ public class XMLBuilder {
             // 构建基础查询结果字段
             buildBaseResultColumns(tableInfo, bw);
             // 构建基础查询条件
-            buildBaseQueryCondition(tableInfo,bw);
+            buildBaseQueryCondition(tableInfo, bw);
             // 构建selectList方法
-            buildSelectList(tableInfo,bw);
+            buildSelectList(tableInfo, bw);
             // 构建selectCount方法
-            buildSelectCount(tableInfo,bw);
+            buildSelectCount(tableInfo, bw);
             // 构建insert方法
-            buildInsert(tableInfo,bw);
+            buildInsert(tableInfo, bw);
             // 构建insertOrUpdate方法
-            buildInsertOrUpdate(tableInfo,bw);
-            bw.write("</mapper>");
+            buildInsertOrUpdate(tableInfo, bw);
+            // 构建insertBatch方法
+            buildInsertBatch(tableInfo, bw);
 
+            bw.write("</mapper>");
             bw.flush();
         } catch (IOException e) {
             logger.error("生成{}.xml文件失败", xmlName, e);
@@ -85,46 +95,108 @@ public class XMLBuilder {
     }
 
     /**
-     * @description: 插入或者更新 只插入或更新bean中有值的字段
      * @param tableInfo
      * @param bw
      * @return
+     * @description: 创建批量插入方法
+     * @author liuhd
+     * 2025/2/2 21:57
+     */
+    private static void buildInsertBatch(TableInfo tableInfo, BufferedWriter bw) throws IOException {
+        String useGeneratedKeysString = "";
+        String keyPropertyString = "";
+
+        // 设置主键回显
+        Map<String, String> map = setUseGeneratedKeysAndKeyProperty(autoIncrementField);
+        useGeneratedKeysString = map.get("useGeneratedKeysString");
+        keyPropertyString = map.get("keyPropertyString");
+
+        CommentBuilder.buildXMLFieldComment(bw, "批量插入");
+        bw.write(String.format("\t<insert id=\"insertBatch\" parameterType=\"%s.%s\" %s %s>",
+                Constants.PACKAGE_PO, tableInfo.getBeanName(), useGeneratedKeysString, keyPropertyString));
+        bw.newLine();
+
+
+        bw.write(String.format("\t\tINSERT INTO %s", tableInfo.getTableName()));
+        // 拼接括号里面的
+        List<FieldInfo> fieldInfoList = tableInfo.getFieldList();
+        StringBuilder sb = new StringBuilder();
+        sb.append("(\n");
+        for (int i = 0; i < fieldInfoList.size(); i++) {
+            if (autoIncrementField != null && fieldInfoList.get(i).getPropertyName().equals(autoIncrementField.getPropertyName()))
+                continue;
+            String tail = ",\n";
+            if (i == fieldInfoList.size() - 1) tail = "\n";
+            sb.append("\t\t\t").append(fieldInfoList.get(i).getFieldName()).append(tail);
+        }
+        sb.append("\t\t)");
+
+        bw.write(sb.toString());
+        bw.newLine();
+
+        bw.write("\t\tVALUES");
+        bw.newLine();
+
+        // 拼接foreach
+        sb = new StringBuilder();
+        sb.append("\t\t<foreach collection=\"list\" item=\"item\" separator=\",\">\n")
+                .append("\t\t\t(\n");
+        for (int i = 0; i < fieldInfoList.size(); i++) {
+            if (autoIncrementField != null && fieldInfoList.get(i).getPropertyName().equals(autoIncrementField.getPropertyName()))
+                continue;
+            String tail = ",\n";
+            if (i == fieldInfoList.size() - 1) tail = "\n";
+            sb.append(String.format("\t\t\t#{item.%s}", fieldInfoList.get(i).getPropertyName())).append(tail);
+        }
+        sb.append("\t\t\t)\n");
+        sb.append("\t\t</foreach>");
+
+        bw.write(sb.toString());
+        bw.newLine();
+
+        bw.write("\t</insert>");
+        bw.newLine();
+        bw.newLine();
+    }
+
+    /**
+     * @param tableInfo
+     * @param bw
+     * @return
+     * @description: 插入或者更新 只插入或更新bean中有值的字段
      * @author liuhd
      * 2025/2/2 20:11
      */
     private static void buildInsertOrUpdate(TableInfo tableInfo, BufferedWriter bw) throws IOException {
+        String useGeneratedKeysString = "";
+        String keyPropertyString = "";
 
-        CommentBuilder.buildXMLFieldComment(bw,"插入或者更新 （只插入或更新bean中有值的字段）");
-        bw.write(String.format("\t<insert id=\"insertOrUpdate\" parameterType=\"%s.%s\">",
+        // 设置主键回显
+        Map<String, String> map = setUseGeneratedKeysAndKeyProperty(autoIncrementField);
+        useGeneratedKeysString = map.get("useGeneratedKeysString");
+        keyPropertyString = map.get("keyPropertyString");
+
+
+        CommentBuilder.buildXMLFieldComment(bw, "插入或者更新 （只插入或更新bean中有值的字段）");
+        bw.write(String.format("\t<insert id=\"insertOrUpdate\" parameterType=\"%s.%s\" %s %s>",
                 Constants.PACKAGE_PO,
-                tableInfo.getBeanName()));
+                tableInfo.getBeanName(),
+                useGeneratedKeysString,
+                keyPropertyString));
         bw.newLine();
 
-        // 寻找自增主键
-        FieldInfo autoIncrementField = null;
-        for (FieldInfo fieldInfo : tableInfo.getFieldList()) {
-            if (fieldInfo.getAutoIncrement()){
-                autoIncrementField = fieldInfo;
-                break;
-            }
-        }
-        if (autoIncrementField != null){
-            bw.write(String.format("\t\t<selectKey keyProperty=\"bean.%s\" resultType=\"%s\" order=\"AFTER\">\n" +
-                    "\t\t\tSELECT LAST_INSERT_ID()\n" +
-                    "\t\t</selectKey>",autoIncrementField.getPropertyName(),autoIncrementField.getJavaType()));
-            bw.newLine();
-        }
-
-        bw.write(String.format("\t\tINSERT INTO %s",tableInfo.getTableName()));
+        bw.write(String.format("\t\tINSERT INTO %s", tableInfo.getTableName()));
         bw.newLine();
 
         bw.write("\t\t<trim prefix=\"(\" suffix=\")\" suffixOverrides=\",\">");
         bw.newLine();
 
         for (FieldInfo fieldInfo : tableInfo.getFieldList()) {
+            if (autoIncrementField != null && fieldInfo.getPropertyName().equals(autoIncrementField.getPropertyName()))
+                continue;
             bw.write(String.format("\t\t\t<if test=\"bean.%s != null\">\n" +
                     "\t\t\t\t%s,\n" +
-                    "\t\t\t</if>",fieldInfo.getPropertyName(),fieldInfo.getFieldName()));
+                    "\t\t\t</if>", fieldInfo.getPropertyName(), fieldInfo.getFieldName()));
             bw.newLine();
         }
 
@@ -138,9 +210,11 @@ public class XMLBuilder {
         bw.newLine();
 
         for (FieldInfo fieldInfo : tableInfo.getFieldList()) {
+            if (autoIncrementField != null && fieldInfo.getPropertyName().equals(autoIncrementField.getPropertyName()))
+                continue;
             bw.write(String.format("\t\t\t<if test=\"bean.%s != null\">\n" +
                     "\t\t\t\t#{bean.%s},\n" +
-                    "\t\t\t</if>",fieldInfo.getPropertyName(),fieldInfo.getPropertyName()));
+                    "\t\t\t</if>", fieldInfo.getPropertyName(), fieldInfo.getPropertyName()));
             bw.newLine();
         }
 
@@ -154,9 +228,11 @@ public class XMLBuilder {
         bw.newLine();
 
         for (FieldInfo fieldInfo : tableInfo.getFieldList()) {
+            if (autoIncrementField != null && fieldInfo.getPropertyName().equals(autoIncrementField.getPropertyName()))
+                continue;
             bw.write(String.format("\t\t\t<if test=\"bean.%s != null\">\n" +
                     "\t\t\t\t%s = VALUES(%s),\n" +
-                    "\t\t\t</if>",fieldInfo.getPropertyName(),fieldInfo.getFieldName(),fieldInfo.getFieldName()));
+                    "\t\t\t</if>", fieldInfo.getPropertyName(), fieldInfo.getFieldName(), fieldInfo.getFieldName()));
             bw.newLine();
         }
 
@@ -169,45 +245,42 @@ public class XMLBuilder {
     }
 
     /**
-     * @description: 构建insert方法 只插入bean有值的部分
      * @param tableInfo
      * @param bw
      * @return
+     * @description: 构建insert方法 只插入bean有值的部分
      * @author liuhd
      * 2025/2/2 17:14
      */
     private static void buildInsert(TableInfo tableInfo, BufferedWriter bw) throws IOException {
-        CommentBuilder.buildXMLFieldComment(bw,"插入 （只插入bean中有值的字段）");
-        bw.write(String.format("\t<insert id=\"insert\" parameterType=\"%s.%s\">",
+        String useGeneratedKeysString = "";
+        String keyPropertyString = "";
+
+        // 设置主键回显
+        Map<String, String> map = setUseGeneratedKeysAndKeyProperty(autoIncrementField);
+        useGeneratedKeysString = map.get("useGeneratedKeysString");
+        keyPropertyString = map.get("keyPropertyString");
+
+        CommentBuilder.buildXMLFieldComment(bw, "插入 （只插入bean中有值的字段）");
+        bw.write(String.format("\t<insert id=\"insert\" parameterType=\"%s.%s\" %s %s>",
                 Constants.PACKAGE_PO,
-                tableInfo.getBeanName()));
+                tableInfo.getBeanName(),
+                useGeneratedKeysString,
+                keyPropertyString));
         bw.newLine();
 
-        // 寻找自增主键
-        FieldInfo autoIncrementField = null;
-        for (FieldInfo fieldInfo : tableInfo.getFieldList()) {
-            if (fieldInfo.getAutoIncrement()){
-                autoIncrementField = fieldInfo;
-                break;
-            }
-        }
-        if (autoIncrementField != null){
-            bw.write(String.format("\t\t<selectKey keyProperty=\"bean.%s\" resultType=\"%s\" order=\"AFTER\">\n" +
-                    "\t\t\tSELECT LAST_INSERT_ID()\n" +
-                    "\t\t</selectKey>",autoIncrementField.getPropertyName(),autoIncrementField.getJavaType()));
-            bw.newLine();
-        }
-
-        bw.write(String.format("\t\tINSERT INTO %s",tableInfo.getTableName()));
+        bw.write(String.format("\t\tINSERT INTO %s", tableInfo.getTableName()));
         bw.newLine();
 
         bw.write("\t\t<trim prefix=\"(\" suffix=\")\" suffixOverrides=\",\">");
         bw.newLine();
 
         for (FieldInfo fieldInfo : tableInfo.getFieldList()) {
+            if (autoIncrementField != null && fieldInfo.getPropertyName().equals(autoIncrementField.getPropertyName()))
+                continue;
             bw.write(String.format("\t\t\t<if test=\"bean.%s != null\">\n" +
                     "\t\t\t\t%s,\n" +
-                    "\t\t\t</if>",fieldInfo.getPropertyName(),fieldInfo.getFieldName()));
+                    "\t\t\t</if>", fieldInfo.getPropertyName(), fieldInfo.getFieldName()));
             bw.newLine();
         }
 
@@ -221,9 +294,11 @@ public class XMLBuilder {
         bw.newLine();
 
         for (FieldInfo fieldInfo : tableInfo.getFieldList()) {
+            if (autoIncrementField != null && fieldInfo.getPropertyName().equals(autoIncrementField.getPropertyName()))
+                continue;
             bw.write(String.format("\t\t\t<if test=\"bean.%s != null\">\n" +
                     "\t\t\t\t#{bean.%s},\n" +
-                    "\t\t\t</if>",fieldInfo.getPropertyName(),fieldInfo.getPropertyName()));
+                    "\t\t\t</if>", fieldInfo.getPropertyName(), fieldInfo.getPropertyName()));
             bw.newLine();
         }
 
@@ -246,7 +321,7 @@ public class XMLBuilder {
         bw.write(String.format("\t<!-- 查询数量-->\n" +
                 "\t<select id=\"selectCount\" resultType=\"java.lang.Long\" >\n" +
                 "\t\t SELECT count(*) FROM %s %s <include refid=\"%s\" />\n" +
-                "\t</select>\n",tableInfo.getTableName(),alias,BASE_QUERY_CONDITION));
+                "\t</select>\n", tableInfo.getTableName(), alias, BASE_QUERY_CONDITION));
         bw.newLine();
         bw.newLine();
     }
@@ -264,7 +339,7 @@ public class XMLBuilder {
                 "\t\t<if test=\"query.simplePage!=null\">\n" +
                 "\t\t\tlimit #{query.simplePage.start},#{query.simplePage.end}\n" +
                 "\t\t</if>\n" +
-                "\t</select>\n",BASE_RESULT_MAP,BASE_RESULT_COLUMN,tableInfo.getTableName(),alias,BASE_QUERY_CONDITION));
+                "\t</select>\n", BASE_RESULT_MAP, BASE_RESULT_COLUMN, tableInfo.getTableName(), alias, BASE_QUERY_CONDITION));
         bw.newLine();
         bw.newLine();
     }
@@ -316,10 +391,10 @@ public class XMLBuilder {
     }
 
     /**
-     * @description: 构建查询结果字段 即 select后紧跟的字段
      * @param tableInfo
      * @param bw
      * @return
+     * @description: 构建查询结果字段 即 select后紧跟的字段
      * @author liuhd
      * 2025/1/31 13:08
      */
@@ -331,12 +406,12 @@ public class XMLBuilder {
         bw.write("\t<sql id=\"" + BASE_RESULT_COLUMN + "\">");
         bw.newLine();
 
-        alias = StringTools.lowerHead(tableInfo.getTableName(), 1).substring(0,1);
+        alias = StringTools.lowerHead(tableInfo.getTableName(), 1).substring(0, 1);
         StringBuilder sb = new StringBuilder("\t\t");
         for (int i = 0; i < tableInfo.getFieldList().size(); i++) {
             sb.append(alias).append(".").append(tableInfo.getFieldList().get(i).getFieldName());
-            if (i != tableInfo.getFieldList().size() -1) sb.append(",");
-            if (i != tableInfo.getFieldList().size() -1 && (i + 1) % 5 == 0) sb.append("\n\t\t");
+            if (i != tableInfo.getFieldList().size() - 1) sb.append(",");
+            if (i != tableInfo.getFieldList().size() - 1 && (i + 1) % 5 == 0) sb.append("\n\t\t");
         }
         sb.append("\n\t</sql>");
         bw.write(sb.toString());
@@ -345,14 +420,14 @@ public class XMLBuilder {
     }
 
     /**
-     * @description: 构建基础查询条件 if xxx xxx = #{xxx}
      * @param tableInfo
      * @param bw
      * @return
+     * @description: 构建基础查询条件 if xxx xxx = #{xxx}
      * @author liuhd
      * 2025/1/31 13:53
      */
-    private static void buildBaseQueryCondition(TableInfo tableInfo,BufferedWriter bw) throws IOException {
+    private static void buildBaseQueryCondition(TableInfo tableInfo, BufferedWriter bw) throws IOException {
         bw.write("\t<!--基础查询条件-->");
         bw.newLine();
         bw.write(String.format("\t<sql id=\"%s\">", BASE_QUERY_CONDITION));
@@ -365,12 +440,12 @@ public class XMLBuilder {
         StringBuilder sb1 = new StringBuilder();
         for (FieldInfo fieldInfo : tableInfo.getFieldList()) {
             String partCondition = "";
-            if ("String".equals(fieldInfo.getJavaType())){
-                partCondition = String.format(" and query.%s != ''",fieldInfo.getPropertyName());
+            if ("String".equals(fieldInfo.getJavaType())) {
+                partCondition = String.format(" and query.%s != ''", fieldInfo.getPropertyName());
             }
-            sb.append(String.format("\t\t\t<if test=\"query.%s != null%s\">",fieldInfo.getPropertyName(),partCondition));
+            sb.append(String.format("\t\t\t<if test=\"query.%s != null%s\">", fieldInfo.getPropertyName(), partCondition));
             sb.append("\n");
-            sb.append(String.format("\t\t\t\tand %s.%s = #{query.%s}",alias,fieldInfo.getFieldName(),fieldInfo.getPropertyName()));
+            sb.append(String.format("\t\t\t\tand %s.%s = #{query.%s}", alias, fieldInfo.getFieldName(), fieldInfo.getPropertyName()));
             sb.append("\n");
             sb.append("\t\t\t</if>");
             sb.append("\n");
@@ -378,11 +453,11 @@ public class XMLBuilder {
             // 额外查询条件
             Set<Map.Entry<FieldInfo, List<ExtendField>>> entries = tableInfo.getExtendFieldMap().entrySet();
             for (Map.Entry<FieldInfo, List<ExtendField>> entry : entries) {
-                if (entry.getKey().getPropertyName().equals(fieldInfo.getPropertyName())){
-                    if ("String".equals(fieldInfo.getJavaType())){
+                if (entry.getKey().getPropertyName().equals(fieldInfo.getPropertyName())) {
+                    if ("String".equals(fieldInfo.getJavaType())) {
                         sb1.append(String.format("\t\t\t<if test=\"query.%s!= null  and query.%s!=''\">\n" +
-                                "\t\t\t\tand %s.%s like concat('%s', #{query.%s}, '%s')\n" +
-                                "\t\t\t</if>\n",
+                                        "\t\t\t\tand %s.%s like concat('%s', #{query.%s}, '%s')\n" +
+                                        "\t\t\t</if>\n",
                                 entry.getValue().get(0).getFieldName(),
                                 entry.getValue().get(0).getFieldName(),
                                 alias,
@@ -391,10 +466,10 @@ public class XMLBuilder {
                                 entry.getValue().get(0).getFieldName(),
                                 "%"));
                     }
-                    if ("Date".equals(fieldInfo.getJavaType())){
+                    if ("Date".equals(fieldInfo.getJavaType())) {
                         sb1.append(String.format("\t\t\t<if test=\"query.%s!= null and query.%s!=''\">\n" +
-                                "\t\t\t\t<![CDATA[ and  %s.%s>=str_to_date(#{query.%s}, '%sY-%sm-%sd') ]]>\n" +
-                                "\t\t\t</if>\n",
+                                        "\t\t\t\t<![CDATA[ and  %s.%s>=str_to_date(#{query.%s}, '%sY-%sm-%sd') ]]>\n" +
+                                        "\t\t\t</if>\n",
                                 entry.getValue().get(0).getFieldName(),
                                 entry.getValue().get(0).getFieldName(),
                                 alias,
@@ -429,6 +504,25 @@ public class XMLBuilder {
         bw.write("\t</sql>");
         bw.newLine();
         bw.newLine();
+    }
+
+    /**
+     * @param autoIncrementField
+     * @return java.util.Map<java.lang.String, java.lang.String>
+     * @description: 设置是否主键回显
+     * @author liuhd
+     * 2025/2/2 22:13
+     */
+    private static Map<String, String> setUseGeneratedKeysAndKeyProperty(FieldInfo autoIncrementField) {
+        Map<String, String> map = new HashMap<>();
+        if (autoIncrementField != null) {
+            map.put("useGeneratedKeysString", String.format("useGeneratedKeys=\"%s\"", "true"));
+            map.put("keyPropertyString", String.format("keyProperty=\"%s\"", autoIncrementField.getPropertyName()));
+        } else {
+            map.put("useGeneratedKeysString", "");
+            map.put("keyPropertyString", "");
+        }
+        return map;
     }
 
 }
