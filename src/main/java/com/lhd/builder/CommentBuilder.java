@@ -35,7 +35,7 @@ public class CommentBuilder {
     public static void buildXMLFieldComment(BufferedWriter bw,String comment){
         if (StringUtils.isEmpty(comment)) return;
         try {
-            bw.write(String.format("\t\t<!-- %s -->",comment));
+            bw.write(String.format("\t<!-- %s -->",comment));
             bw.newLine();
         } catch (IOException e) {
             logger.error("XML字段描述生成失败",e);

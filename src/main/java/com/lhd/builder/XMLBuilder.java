@@ -64,6 +64,8 @@ public class XMLBuilder {
             buildSelectList(tableInfo,bw);
             // 构建selectCount方法
             buildSelectCount(tableInfo,bw);
+            // 构建insert方法
+            buildInsert(tableInfo,bw);
 
             bw.write("</mapper>");
 
@@ -79,6 +81,73 @@ public class XMLBuilder {
                 logger.error("BufferedWriter关流失败");
             }
         }
+    }
+
+    /**
+     * @description: 构建insert方法 只插入有值的部分
+     * @param tableInfo
+     * @param bw
+     * @return
+     * @author liuhd
+     * 2025/2/2 17:14
+     */
+    private static void buildInsert(TableInfo tableInfo, BufferedWriter bw) throws IOException {
+        CommentBuilder.buildXMLFieldComment(bw,"插入 （只插入有值的字段）");
+        bw.write(String.format("\t<insert id=\"insert\" parameterType=\"%s.%s\">",
+                Constants.PACKAGE_PO,
+                tableInfo.getBeanName()));
+        bw.newLine();
+
+        // 寻找自增主键
+        FieldInfo autoIncrementField = null;
+        for (FieldInfo fieldInfo : tableInfo.getFieldList()) {
+            if (fieldInfo.getAutoIncrement()){
+                autoIncrementField = fieldInfo;
+                break;
+            }
+        }
+        if (autoIncrementField != null){
+            bw.write(String.format("\t\t<selectKey keyProperty=\"bean.%s\" resultType=\"%s\" order=\"AFTER\">\n" +
+                    "\t\t\tSELECT LAST_INSERT_ID()\n" +
+                    "\t\t</selectKey>",autoIncrementField.getPropertyName(),autoIncrementField.getJavaType()));
+            bw.newLine();
+        }
+
+        bw.write(String.format("\t\tINSERT INTO %s",tableInfo.getTableName()));
+        bw.newLine();
+
+        bw.write("\t\t<trim prefix=\"(\" suffix=\")\" suffixOverrides=\",\">");
+        bw.newLine();
+
+        for (FieldInfo fieldInfo : tableInfo.getFieldList()) {
+            bw.write(String.format("\t\t\t<if test=\"bean.%s != null\">\n" +
+                    "\t\t\t\t%s,\n" +
+                    "\t\t\t</if>",fieldInfo.getPropertyName(),fieldInfo.getFieldName()));
+            bw.newLine();
+        }
+
+        bw.write("\t\t</trim>");
+        bw.newLine();
+
+        bw.write("\t\tVALUES");
+        bw.newLine();
+
+        bw.write("\t\t<trim prefix=\"(\" suffix=\")\" suffixOverrides=\",\">");
+        bw.newLine();
+
+        for (FieldInfo fieldInfo : tableInfo.getFieldList()) {
+            bw.write(String.format("\t\t\t<if test=\"bean.%s != null\">\n" +
+                    "\t\t\t\t#{bean.%s},\n" +
+                    "\t\t\t</if>",fieldInfo.getPropertyName(),fieldInfo.getPropertyName()));
+            bw.newLine();
+        }
+
+        bw.write("\t\t</trim>");
+        bw.newLine();
+
+        bw.write("\t</insert>");
+        bw.newLine();
+        bw.newLine();
     }
 
     /*
