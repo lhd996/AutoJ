@@ -58,10 +58,10 @@ public class QueryBuilder {
                 bw.newLine();
                 bw.newLine();
             }
-            for (Map.Entry<String, List<ExtendField>> entry : tableInfo.getExtendFieldMap().entrySet()) {
+            for (Map.Entry<FieldInfo, List<ExtendField>> entry : tableInfo.getExtendFieldMap().entrySet()) {
                 List<ExtendField> extendFieldList = entry.getValue();
                 for (ExtendField extendField : extendFieldList) {
-                    CommentBuilder.buildFieldComment(bw, entry.getKey() + "扩展字段");
+                    CommentBuilder.buildFieldComment(bw, entry.getKey().getPropertyName() + "扩展字段");
                     bw.write("\tprivate " + extendField.getFieldType() + " " + extendField.getFieldName() + ";");
                     bw.newLine();
                     bw.newLine();
@@ -90,7 +90,7 @@ public class QueryBuilder {
                 bw.newLine();
                 bw.newLine();
             }
-            for (Map.Entry<String, List<ExtendField>> entry : tableInfo.getExtendFieldMap().entrySet()) {
+            for (Map.Entry<FieldInfo, List<ExtendField>> entry : tableInfo.getExtendFieldMap().entrySet()) {
                 List<ExtendField> extendFieldList = entry.getValue();
                 for (ExtendField extendField : extendFieldList) {
                     // getter

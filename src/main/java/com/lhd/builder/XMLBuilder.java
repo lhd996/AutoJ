@@ -60,6 +60,11 @@ public class XMLBuilder {
             buildBaseResultColumns(tableInfo, bw);
             // 构建基础查询条件
             buildBaseQueryCondition(tableInfo,bw);
+            // 构建selectList方法
+            buildSelectList(tableInfo,bw);
+            // 构建selectCount方法
+            buildSelectCount(tableInfo,bw);
+
             bw.write("</mapper>");
 
             bw.flush();
@@ -74,6 +79,40 @@ public class XMLBuilder {
                 logger.error("BufferedWriter关流失败");
             }
         }
+    }
+
+    /*
+     * @description: 构建SelectCount方法
+     * @param null
+     * @return null
+     * @author liuhd
+     * 2025/2/1 11:38
+     */
+    private static void buildSelectCount(TableInfo tableInfo, BufferedWriter bw) throws IOException {
+        bw.write(String.format("\t<!-- 查询数量-->\n" +
+                "\t<select id=\"selectCount\" resultType=\"java.lang.Long\" >\n" +
+                "\t\t SELECT count(*) FROM %s %s <include refid=\"%s\" />\n" +
+                "\t</select>\n",tableInfo.getTableName(),alias,BASE_QUERY_CONDITION));
+        bw.newLine();
+        bw.newLine();
+    }
+
+    private static void buildSelectList(TableInfo tableInfo, BufferedWriter bw) throws IOException {
+        bw.write(String.format("\t<!-- 查询集合-->\n" +
+                "\t<select id=\"selectList\" resultMap=\"%s\" >\n" +
+                "\t\tSELECT\n" +
+                "\t\t<include refid=\"%s\"/>\n" +
+                "\t\tFROM %s %s\n" +
+                "\t\t<include refid=\"%s\"/>\n" +
+                "\t\t<if test=\"query.orderBy!=null\">\n" +
+                "\t\t\torder by ${query.orderBy}\n" +
+                "\t\t</if>\n" +
+                "\t\t<if test=\"query.simplePage!=null\">\n" +
+                "\t\t\tlimit #{query.simplePage.start},#{query.simplePage.end}\n" +
+                "\t\t</if>\n" +
+                "\t</select>\n",BASE_RESULT_MAP,BASE_RESULT_COLUMN,tableInfo.getTableName(),alias,BASE_QUERY_CONDITION));
+        bw.newLine();
+        bw.newLine();
     }
 
     /**
@@ -141,7 +180,7 @@ public class XMLBuilder {
         alias = StringTools.lowerHead(tableInfo.getTableName(), 1).substring(0,1);
         StringBuilder sb = new StringBuilder("\t\t");
         for (int i = 0; i < tableInfo.getFieldList().size(); i++) {
-            sb.append(alias).append(".").append(tableInfo.getFieldList().get(i).getPropertyName());
+            sb.append(alias).append(".").append(tableInfo.getFieldList().get(i).getFieldName());
             if (i != tableInfo.getFieldList().size() -1) sb.append(",");
             if (i != tableInfo.getFieldList().size() -1 && (i + 1) % 5 == 0) sb.append("\n\t\t");
         }
@@ -183,9 +222,9 @@ public class XMLBuilder {
             sb.append("\n");
 
             // 额外查询条件
-            Set<Map.Entry<String, List<ExtendField>>> entries = tableInfo.getExtendFieldMap().entrySet();
-            for (Map.Entry<String, List<ExtendField>> entry : entries) {
-                if (entry.getKey().equals(fieldInfo.getPropertyName())){
+            Set<Map.Entry<FieldInfo, List<ExtendField>>> entries = tableInfo.getExtendFieldMap().entrySet();
+            for (Map.Entry<FieldInfo, List<ExtendField>> entry : entries) {
+                if (entry.getKey().getPropertyName().equals(fieldInfo.getPropertyName())){
                     if ("String".equals(fieldInfo.getJavaType())){
                         sb1.append(String.format("\t\t\t<if test=\"query.%s!= null  and query.%s!=''\">\n" +
                                 "\t\t\t\tand %s.%s like concat('%s', #{query.%s}, '%s')\n" +
@@ -193,7 +232,7 @@ public class XMLBuilder {
                                 entry.getValue().get(0).getFieldName(),
                                 entry.getValue().get(0).getFieldName(),
                                 alias,
-                                tableInfo.getTableName(),
+                                entry.getKey().getFieldName(),
                                 "%",
                                 entry.getValue().get(0).getFieldName(),
                                 "%"));
@@ -205,7 +244,7 @@ public class XMLBuilder {
                                 entry.getValue().get(0).getFieldName(),
                                 entry.getValue().get(0).getFieldName(),
                                 alias,
-                                tableInfo.getTableName(),
+                                entry.getKey().getFieldName(),
                                 entry.getValue().get(0).getFieldName(),
                                 "%",
                                 "%",
@@ -216,7 +255,7 @@ public class XMLBuilder {
                                 entry.getValue().get(1).getFieldName(),
                                 entry.getValue().get(1).getFieldName(),
                                 alias,
-                                tableInfo.getTableName(),
+                                entry.getKey().getFieldName(),
                                 entry.getValue().get(1).getFieldName(),
                                 "%",
                                 "%",

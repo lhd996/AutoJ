@@ -54,13 +54,13 @@ public class TableInfo {
     private Boolean haveBigDecimal;
 
     // 扩展字段 例如Fuzzy以及start end
-    private Map<String,List<ExtendField>> extendFieldMap;
+    private Map<FieldInfo,List<ExtendField>> extendFieldMap;
 
-    public Map<String, List<ExtendField>> getExtendFieldMap() {
+    public Map<FieldInfo, List<ExtendField>> getExtendFieldMap() {
         return extendFieldMap;
     }
 
-    public void setExtendFieldMap(Map<String, List<ExtendField>> extendFieldMap) {
+    public void setExtendFieldMap(Map<FieldInfo, List<ExtendField>> extendFieldMap) {
         this.extendFieldMap = extendFieldMap;
     }
 

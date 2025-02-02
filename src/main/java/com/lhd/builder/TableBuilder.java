@@ -123,7 +123,7 @@ public class TableBuilder {
      * 2025/1/31 14:57
      */
     private static void setExtendsField(TableInfo tableInfo) {
-        Map<String, List<ExtendField>> map = new HashMap<>();
+        Map<FieldInfo, List<ExtendField>> map = new HashMap<>();
         for (FieldInfo fieldInfo : tableInfo.getFieldList()) {
             ArrayList<ExtendField> list = new ArrayList<>();
             // String类型的扩展是Fuzzy
@@ -132,7 +132,7 @@ public class TableBuilder {
                 extendField.setFieldName(fieldInfo.getPropertyName() + "Fuzzy");
                 extendField.setFieldType("String");
                 list.add(extendField);
-                map.put(fieldInfo.getPropertyName(),list);
+
             }
             // Date类型的扩展是Start与End
             if ("Date".equals(fieldInfo.getJavaType())){
@@ -146,9 +146,8 @@ public class TableBuilder {
 
                 list.add(extendField1);
                 list.add(extendField2);
-
-                map.put(fieldInfo.getPropertyName(),list);
             }
+            map.put(fieldInfo,list);
             // 其他类型的扩展 。。。。
         }
 

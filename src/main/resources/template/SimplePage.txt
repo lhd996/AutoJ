@@ -1,20 +1,31 @@
 public class SimplePage {
+	// 页号
 	private int pageNo;
-	private int countTotal;
+
+	// 查询结果中有多少条记录 通过它算出结果有多少页
+	private int resultCount;
+
+	// 一页多大
 	private int pageSize;
+
+	// 总共查出来多少页
 	private int pageTotal;
+
+	// limit的起始索引
 	private int start;
+
+	// limit的偏移量
 	private int end;
 
 	public SimplePage() {
 	}
 
-	public SimplePage(Integer pageNo, int countTotal, int pageSize) {
+	public SimplePage(Integer pageNo, int resultCount, int pageSize) {
 		if (null == pageNo) {
 			pageNo = 0;
 		}
 		this.pageNo = pageNo;
-		this.countTotal = countTotal;
+		this.resultCount = resultCount;
 		this.pageSize = pageSize;
 		action();
 	}
@@ -28,9 +39,10 @@ public class SimplePage {
 		if (this.pageSize <= 0) {
 			this.pageSize = PageSize.SIZE20.getSize();
 		}
-		if (this.countTotal > 0) {
-			this.pageTotal = this.countTotal % this.pageSize == 0 ? this.countTotal / this.pageSize
-					: this.countTotal / this.pageSize + 1;
+		// 计算结果有多少页
+		if (this.resultCount > 0) {
+			this.pageTotal = this.resultCount % this.pageSize == 0 ? this.resultCount / this.pageSize
+					: this.resultCount / this.pageSize + 1;
 		} else {
 			pageTotal = 1;
 		}
@@ -38,23 +50,13 @@ public class SimplePage {
 		if (pageNo <= 1) {
 			pageNo = 1;
 		}
+		// 如果想要的页号比查出来的页还大
 		if (pageNo > pageTotal) {
 			pageNo = pageTotal;
 		}
+
 		this.start = (pageNo - 1) * pageSize;
 		this.end = this.pageSize;
-	}
-
-	public int getStart() {
-		return start;
-	}
-
-	public int getEnd() {
-		return end;
-	}
-
-	public int getPageTotal() {
-		return pageTotal;
 	}
 
 	public int getPageNo() {
@@ -65,33 +67,44 @@ public class SimplePage {
 		this.pageNo = pageNo;
 	}
 
-	public void setPageTotal(int pageTotal) {
-		this.pageTotal = pageTotal;
+	public int getResultCount() {
+		return resultCount;
 	}
 
-	public int getCountTotal() {
-		return countTotal;
+	public void setResultCount(int resultCount) {
+		this.resultCount = resultCount;
+		this.action();
 	}
 
 	public int getPageSize() {
 		return pageSize;
 	}
 
+	public void setPageSize(int pageSize) {
+		this.pageSize = pageSize;
+	}
+
+	public int getPageTotal() {
+		return pageTotal;
+	}
+
+	public void setPageTotal(int pageTotal) {
+		this.pageTotal = pageTotal;
+	}
+
+	public int getStart() {
+		return start;
+	}
+
 	public void setStart(int start) {
 		this.start = start;
+	}
+
+	public int getEnd() {
+		return end;
 	}
 
 	public void setEnd(int end) {
 		this.end = end;
 	}
-
-	public void setCountTotal(int countTotal) {
-		this.countTotal = countTotal;
-		this.action();
-	}
-
-	public void setPageSize(int pageSize) {
-		this.pageSize = pageSize;
-	}
-
 }

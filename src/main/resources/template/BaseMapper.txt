@@ -14,39 +14,39 @@ interface BaseMapper<P, Q> {
     /**
      * selectCount:(根据集合查询数量)
      */
-    Integer selectCount(@Param("query") Q q);
+    Long selectCount(@Param("query") Q q);
 
     /**
      * insert:(插入)
      */
-    Integer insert(@Param("bean") P p);
+    Long insert(@Param("bean") P p);
 
 
     /**
      * insertOrUpdate:(插入或者更新)
      */
-    Integer insertOrUpdate(@Param("bean") P p);
+    Long insertOrUpdate(@Param("bean") P p);
 
 
     /**
      * insertBatch:(批量插入)
      */
-    Integer insertBatch(@Param("list") List<P> list);
+    Long insertBatch(@Param("list") List<P> list);
 
 
     /**
      * insertOrUpdateBatch:(批量插入或更新)
      */
-    Integer insertOrUpdateBatch(@Param("list") List<P> list);
+    Long insertOrUpdateBatch(@Param("list") List<P> list);
 
 
     /**
      * updateByQuery:(多条件更新)
      */
-    Integer updateByQuery(@Param("bean") P p, @Param("query") Q q);
+    Long updateByQuery(@Param("bean") P p, @Param("query") Q q);
 
     /**
      * deleteByQuery:(多条件删除)
      */
-    Integer deleteByQuery(@Param("query") Q q);
+    Long deleteByQuery(@Param("query") Q q);
 }
