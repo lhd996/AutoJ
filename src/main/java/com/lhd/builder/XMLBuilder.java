@@ -100,9 +100,12 @@ public class XMLBuilder {
             buildUpdateByParam(tableInfo,bw);
             // 构建多条件删除方法
             buildDeleteByParam(tableInfo,bw);
-
-//            // 构建唯一索引的select方法
-//            buildUniqueIndexSelect(tableInfo,bw);
+            // 构建唯一索引的select方法
+            buildUniqueIndexSelect(tableInfo,bw);
+            // 构建唯一索引的delete方法
+            buildUniqueIndexDelete(tableInfo,bw);
+            // 构建唯一索引的update方法
+            buildUniqueIndexUpdate(tableInfo,bw);
 
             bw.write("</mapper>");
             bw.flush();
@@ -119,6 +122,82 @@ public class XMLBuilder {
         }
     }
 
+    private static void buildUniqueIndexUpdate(TableInfo tableInfo, BufferedWriter bw) throws IOException {
+        Map<String, List<FieldInfo>> keyIndexMap = tableInfo.getKeyIndexMap();
+        for (Map.Entry<String, List<FieldInfo>> entry : keyIndexMap.entrySet()) {
+            String keyName = entry.getKey();
+            List<FieldInfo> indexList = entry.getValue();
+
+            // 方法名
+            StringBuilder methodName = new StringBuilder();
+            MapperBuilder.joinMethodName(methodName,indexList);
+            methodName.delete(methodName.indexOf("("),methodName.indexOf("(") + 1);
+            // 参数 xxx = #{xxx}
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < indexList.size(); i++) {
+                String tail = " and ";
+                if (i == indexList.size() - 1) tail = "";
+                sb.append(indexList.get(i).getFieldName()).append(" = ").append(String.format("#{%s}",indexList.get(i).getPropertyName())).append(tail);
+            }
+            // 条件 <if test >
+            StringBuilder condition = new StringBuilder();
+            // 不能更新自己
+            List<FieldInfo> filterList = tableInfo.getFieldList().stream().filter(item -> !indexList.contains(item)).collect(Collectors.toList());
+            for (FieldInfo fieldInfo : filterList) {
+                condition.append(String.format("\t\t\t<if test=\"bean.%s != null\">\n" +
+                        "\t\t\t\t%s = #{bean.%s},\n" +
+                        "\t\t\t</if>\n",fieldInfo.getPropertyName(),fieldInfo.getFieldName(),fieldInfo.getPropertyName()));
+            }
+            CommentBuilder.buildXMLFieldComment(bw,String.format("根据%s更新",keyName));
+
+            bw.write(String.format("\t<update id=\"updateBy%s\">\n" +
+                    "\t\tUPDATE %s\n" +
+                    "\t\t<set>\n" +
+                    "%s" +
+                    "\t\t</set>\n" +
+                    "\t\twhere %s\n" +
+                    "\t</update>",methodName,tableInfo.getTableName(),condition,sb));
+
+            bw.newLine();
+            bw.newLine();
+        }
+    }
+    /**
+     * @description: 构建唯一索引的delete方法
+     * @param tableInfo
+     * @param bw
+     * @return
+     * @author liuhd
+     * 2025/2/3 20:16
+     */
+    private static void buildUniqueIndexDelete(TableInfo tableInfo, BufferedWriter bw) throws IOException {
+        Map<String, List<FieldInfo>> keyIndexMap = tableInfo.getKeyIndexMap();
+        for (Map.Entry<String, List<FieldInfo>> entry : keyIndexMap.entrySet()) {
+            String keyName = entry.getKey();
+            List<FieldInfo> indexList = entry.getValue();
+
+            // 方法名
+            StringBuilder methodName = new StringBuilder();
+            MapperBuilder.joinMethodName(methodName,indexList);
+            methodName.delete(methodName.indexOf("("),methodName.indexOf("(") + 1);
+            // 参数 xxx = #{xxx}
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < indexList.size(); i++) {
+                String tail = " and ";
+                if (i == indexList.size() - 1) tail = "";
+                sb.append(indexList.get(i).getFieldName()).append(" = ").append(String.format("#{%s}",indexList.get(i).getPropertyName())).append(tail);
+            }
+
+            CommentBuilder.buildXMLFieldComment(bw,String.format("根据%s删除",keyName));
+            bw.write(String.format("\t<delete id=\"deleteBy%s\">\n" +
+                    "\t\tdelete\n" +
+                    "\t\tfrom %s where %s\n" +
+                    "\t</delete>", methodName,tableInfo.getTableName(),sb));
+            bw.newLine();
+            bw.newLine();
+        }
+    }
+
 
     /**
      * @description: 构建唯一索引的select方法
@@ -128,10 +207,33 @@ public class XMLBuilder {
      * @author liuhd
      * 2025/2/3 19:09
      */
-    private static void buildUniqueIndexSelect(TableInfo tableInfo, BufferedWriter bw) {
+    private static void buildUniqueIndexSelect(TableInfo tableInfo, BufferedWriter bw) throws IOException {
         Map<String, List<FieldInfo>> keyIndexMap = tableInfo.getKeyIndexMap();
+        for (Map.Entry<String, List<FieldInfo>> entry : keyIndexMap.entrySet()) {
+            String keyName = entry.getKey();
+            List<FieldInfo> indexList = entry.getValue();
 
-        CommentBuilder.buildXMLFieldComment(bw,"");
+            // 方法名
+            StringBuilder methodName = new StringBuilder();
+            MapperBuilder.joinMethodName(methodName,indexList);
+            methodName.delete(methodName.indexOf("("),methodName.indexOf("(") + 1);
+            // 参数 xxx = #{xxx}
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < indexList.size(); i++) {
+                String tail = " and ";
+                if (i == indexList.size() - 1) tail = "";
+                sb.append(indexList.get(i).getFieldName()).append(" = ").append(String.format("#{%s}",indexList.get(i).getPropertyName())).append(tail);
+            }
+
+            CommentBuilder.buildXMLFieldComment(bw,String.format("根据%s查询",keyName));
+            bw.write(String.format("\t<select id=\"selectBy%s\" resultMap=\"%s\">\n" +
+                    "\t\tselect\n" +
+                    "\t\t<include refid=\"%s\"/>\n" +
+                    "\t\tfrom %s %s where %s\n" +
+                    "\t</select>", methodName,BASE_RESULT_MAP,BASE_RESULT_COLUMN,tableInfo.getTableName(),alias,sb));
+            bw.newLine();
+            bw.newLine();
+        }
     }
 
     /**
@@ -171,7 +273,9 @@ public class XMLBuilder {
         StringBuilder sb = new StringBuilder();
         sb.append("\t\t<set>\n");
 
+        // 只删除不含主键的部分
         List<FieldInfo> fieldInfoList = tableInfo.getFieldList();
+        // 过滤出来
         List<FieldInfo> filteredFieldInfoList = fieldInfoList.stream().filter((item) -> !primaryList.contains(item)).collect(Collectors.toList());
         for (FieldInfo fieldInfo : filteredFieldInfoList) {
             sb.append(String.format("\t\t\t<if test=\"bean.%s != null\">\n" +

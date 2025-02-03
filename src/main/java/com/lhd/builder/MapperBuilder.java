@@ -69,7 +69,7 @@ public class MapperBuilder {
                         sb.append("\tP selectBy");
                         List<FieldInfo> indexList = entry.getValue();
                         joinMethodName(sb, indexList);
-                        joinParam(bw, sb, indexList);
+                        joinParam(sb, indexList);
 
                         CommentBuilder.buildMethodComment(bw,"根据索引" + entry.getKey() + "查询");
                         bw.write(sb.toString());
@@ -86,7 +86,7 @@ public class MapperBuilder {
                         joinMethodName(sb, indexList);
 
                         sb.append("@Param(\"bean\") P p,");
-                        joinParam(bw, sb, indexList);
+                        joinParam(sb, indexList);
 
                         CommentBuilder.buildMethodComment(bw,"根据索引" + entry.getKey() + "更新");
                         bw.write(sb.toString());
@@ -100,7 +100,7 @@ public class MapperBuilder {
                         sb.append("\tInteger deleteBy");
                         List<FieldInfo> indexList = entry.getValue();
                         joinMethodName(sb, indexList);
-                        joinParam(bw, sb, indexList);
+                        joinParam(sb, indexList);
 
                         CommentBuilder.buildMethodComment(bw,"根据索引" + entry.getKey() + "删除");
                         bw.write(sb.toString());
@@ -130,7 +130,7 @@ public class MapperBuilder {
      * @author liuhd
      * 2025/1/30 17:04
      */
-    private static void joinMethodName(StringBuilder sb, List<FieldInfo> indexList) {
+    public static void joinMethodName(StringBuilder sb, List<FieldInfo> indexList) {
         for (int i = 0; i < indexList.size(); i++) {
             if (i != 0) sb.append("And");
             sb.append(StringTools.UpperHead(indexList.get(i).getPropertyName(), 1));
@@ -140,14 +140,13 @@ public class MapperBuilder {
 
     /**
      * @description: 拼接参数列表部分
-     * @param bw
      * @param sb
      * @param indexList
      * @return
      * @author liuhd
      * 2025/1/30 16:55
      */
-    private static void joinParam(BufferedWriter bw, StringBuilder sb, List<FieldInfo> indexList) throws IOException {
+    private static void joinParam(StringBuilder sb, List<FieldInfo> indexList) throws IOException {
         for (int i = 0; i < indexList.size(); i++) {
             sb.append("@Param(\"")
                     .append(indexList.get(i).getPropertyName())
