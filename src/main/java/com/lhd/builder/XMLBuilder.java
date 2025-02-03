@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @Author: liuhd
@@ -25,7 +26,11 @@ public class XMLBuilder {
     private static final String BASE_RESULT_COLUMN = "base_result_column";
     private static final String BASE_QUERY_CONDITION = "base_query_condition";
 
+    // 表中自增主键字段
     private static FieldInfo autoIncrementField = null;
+
+    // 表中主键字段
+    private static List<FieldInfo> primaryList = null;
 
     private static String alias;
 
@@ -44,6 +49,17 @@ public class XMLBuilder {
                 break;
             }
         }
+        // 找到主键
+        primaryList = null;
+        Map<String, List<FieldInfo>> keyIndexMap = tableInfo.getKeyIndexMap();
+        for (Map.Entry<String, List<FieldInfo>> entry : keyIndexMap.entrySet()) {
+            if ("PRIMARY".equals(entry.getKey())) {
+                primaryList = entry.getValue();
+                break;
+            }
+        }
+
+
         // xml名字
         String xmlName = tableInfo.getBeanName() + Constants.MAPPER_BEAN_SUFFIX;
         // 该表PO全类名
@@ -78,6 +94,15 @@ public class XMLBuilder {
             buildInsertOrUpdate(tableInfo, bw);
             // 构建insertBatch方法
             buildInsertBatch(tableInfo, bw);
+            // 构建insertOrUpdateBatch方法
+            buildInsertOrUpdateBatch(tableInfo,bw);
+            // 构建多条件更新方法
+            buildUpdateByParam(tableInfo,bw);
+            // 构建多条件删除方法
+            buildDeleteByParam(tableInfo,bw);
+
+//            // 构建唯一索引的select方法
+//            buildUniqueIndexSelect(tableInfo,bw);
 
             bw.write("</mapper>");
             bw.flush();
@@ -92,6 +117,154 @@ public class XMLBuilder {
                 logger.error("BufferedWriter关流失败");
             }
         }
+    }
+
+
+    /**
+     * @description: 构建唯一索引的select方法
+     * @param tableInfo
+     * @param bw
+     * @return
+     * @author liuhd
+     * 2025/2/3 19:09
+     */
+    private static void buildUniqueIndexSelect(TableInfo tableInfo, BufferedWriter bw) {
+        Map<String, List<FieldInfo>> keyIndexMap = tableInfo.getKeyIndexMap();
+
+        CommentBuilder.buildXMLFieldComment(bw,"");
+    }
+
+    /**
+     * @description: 构建多条件删除方法
+     * @param tableInfo
+     * @param bw
+     * @return
+     * @author liuhd
+     * 2025/2/3 19:48
+     */
+    private static void buildDeleteByParam(TableInfo tableInfo, BufferedWriter bw) throws IOException {
+        CommentBuilder.buildXMLFieldComment(bw,"多条件删除");
+        bw.write(String.format("\t<delete id=\"deleteByParam\">\n" +
+                "\t\tdelete from %s %s\n" +
+                "\t\t<include refid=\"%s\"/>\n" +
+                "\t</delete>",tableInfo.getTableName(),alias,BASE_QUERY_CONDITION));
+        bw.newLine();
+        bw.newLine();
+    }
+
+
+    /**
+     * @param tableInfo 构建多条件更新方法
+     * @param bw
+     * @return
+     * @author liuhd
+     * 2025/2/3 19:18
+     */
+    private static void buildUpdateByParam(TableInfo tableInfo, BufferedWriter bw) throws IOException {
+        CommentBuilder.buildXMLFieldComment(bw,"多条件更新方法");
+        bw.write("\t<update id=\"updateByParam\">");
+        bw.newLine();
+
+        bw.write(String.format("\t\tUPDATE %s %s",tableInfo.getTableName(),alias));
+        bw.newLine();
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("\t\t<set>\n");
+
+        List<FieldInfo> fieldInfoList = tableInfo.getFieldList();
+        List<FieldInfo> filteredFieldInfoList = fieldInfoList.stream().filter((item) -> !primaryList.contains(item)).collect(Collectors.toList());
+        for (FieldInfo fieldInfo : filteredFieldInfoList) {
+            sb.append(String.format("\t\t\t<if test=\"bean.%s != null\">\n" +
+                    "\t\t\t\t%s = #{bean.%s},\n" +
+                    "\t\t\t</if>\n",fieldInfo.getPropertyName(),fieldInfo.getFieldName(),fieldInfo.getPropertyName()));
+        }
+        sb.append(String.format("\t\t<include refid=\"%s\"/>\n",BASE_QUERY_CONDITION));
+        sb.append("\t\t</set>");
+
+        bw.write(sb.toString());
+        bw.newLine();
+
+        bw.write("\t</update>");
+        bw.newLine();
+        bw.newLine();
+    }
+
+    /**
+     * @description: 构建insertOrUpdateBatch方法
+     * @param tableInfo
+     * @param bw
+     * @return
+     * @author liuhd
+     * 2025/2/3 18:47
+     */
+    private static void buildInsertOrUpdateBatch(TableInfo tableInfo, BufferedWriter bw) throws IOException {
+        CommentBuilder.buildXMLFieldComment(bw,"批量新增或修改");
+
+        String useGeneratedKeysString = "";
+        String keyPropertyString = "";
+
+        // 设置主键回显
+        Map<String, String> map = setUseGeneratedKeysAndKeyProperty(autoIncrementField,"insertBatch");
+        useGeneratedKeysString = map.get("useGeneratedKeysString");
+        keyPropertyString = map.get("keyPropertyString");
+
+        bw.write(String.format("\t<insert id=\"insertOrUpdateBatch\" parameterType=\"%s.%s\" %s %s>",
+                Constants.PACKAGE_PO, tableInfo.getBeanName(), useGeneratedKeysString, keyPropertyString));
+        bw.newLine();
+
+
+        bw.write(String.format("\t\tINSERT INTO %s", tableInfo.getTableName()));
+        // 拼接括号里面的
+        List<FieldInfo> fieldInfoList = tableInfo.getFieldList();
+        StringBuilder sb = new StringBuilder();
+        sb.append("(\n");
+        for (int i = 0; i < fieldInfoList.size(); i++) {
+            String tail = ",\n";
+            if (i == fieldInfoList.size() - 1) tail = "\n";
+            sb.append("\t\t\t").append(fieldInfoList.get(i).getFieldName()).append(tail);
+        }
+        sb.append("\t\t)");
+
+        bw.write(sb.toString());
+        bw.newLine();
+
+        bw.write("\t\tVALUES");
+        bw.newLine();
+
+        // 拼接foreach
+        sb = new StringBuilder();
+        sb.append("\t\t<foreach collection=\"list\" item=\"item\" separator=\",\">\n")
+                .append("\t\t\t(\n");
+        for (int i = 0; i < fieldInfoList.size(); i++) {
+            String tail = ",\n";
+            if (i == fieldInfoList.size() - 1) tail = "\n";
+            sb.append(String.format("\t\t\t#{item.%s}", fieldInfoList.get(i).getPropertyName())).append(tail);
+        }
+        sb.append("\t\t\t)\n");
+        sb.append("\t\t</foreach>");
+
+        bw.write(sb.toString());
+        bw.newLine();
+
+
+        bw.write("\t\ton DUPLICATE key update");
+        bw.newLine();
+
+        sb = new StringBuilder();
+
+        for (int i = 0; i < fieldInfoList.size(); i++) {
+            if (autoIncrementField != null && fieldInfoList.get(i).getPropertyName().equals(autoIncrementField.getPropertyName()))
+                continue;
+            String tail = ",\n";
+            if (i == fieldInfoList.size() - 1) tail = "\n";
+            sb.append("\t\t").append(fieldInfoList.get(i).getFieldName()).append(" = ").append(String.format("VALUES(%s)",fieldInfoList.get(i).getFieldName())).append(tail);
+        }
+
+        bw.write(sb.toString());
+
+        bw.write("\t</insert>");
+        bw.newLine();
+        bw.newLine();
     }
 
     /**
