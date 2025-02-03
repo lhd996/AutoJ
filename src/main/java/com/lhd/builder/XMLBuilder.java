@@ -107,7 +107,7 @@ public class XMLBuilder {
         String keyPropertyString = "";
 
         // 设置主键回显
-        Map<String, String> map = setUseGeneratedKeysAndKeyProperty(autoIncrementField);
+        Map<String, String> map = setUseGeneratedKeysAndKeyProperty(autoIncrementField,"insertBatch");
         useGeneratedKeysString = map.get("useGeneratedKeysString");
         keyPropertyString = map.get("keyPropertyString");
 
@@ -172,7 +172,7 @@ public class XMLBuilder {
         String keyPropertyString = "";
 
         // 设置主键回显
-        Map<String, String> map = setUseGeneratedKeysAndKeyProperty(autoIncrementField);
+        Map<String, String> map = setUseGeneratedKeysAndKeyProperty(autoIncrementField,"insertOrUpdate");
         useGeneratedKeysString = map.get("useGeneratedKeysString");
         keyPropertyString = map.get("keyPropertyString");
 
@@ -192,8 +192,6 @@ public class XMLBuilder {
         bw.newLine();
 
         for (FieldInfo fieldInfo : tableInfo.getFieldList()) {
-            if (autoIncrementField != null && fieldInfo.getPropertyName().equals(autoIncrementField.getPropertyName()))
-                continue;
             bw.write(String.format("\t\t\t<if test=\"bean.%s != null\">\n" +
                     "\t\t\t\t%s,\n" +
                     "\t\t\t</if>", fieldInfo.getPropertyName(), fieldInfo.getFieldName()));
@@ -210,8 +208,6 @@ public class XMLBuilder {
         bw.newLine();
 
         for (FieldInfo fieldInfo : tableInfo.getFieldList()) {
-            if (autoIncrementField != null && fieldInfo.getPropertyName().equals(autoIncrementField.getPropertyName()))
-                continue;
             bw.write(String.format("\t\t\t<if test=\"bean.%s != null\">\n" +
                     "\t\t\t\t#{bean.%s},\n" +
                     "\t\t\t</if>", fieldInfo.getPropertyName(), fieldInfo.getPropertyName()));
@@ -257,7 +253,7 @@ public class XMLBuilder {
         String keyPropertyString = "";
 
         // 设置主键回显
-        Map<String, String> map = setUseGeneratedKeysAndKeyProperty(autoIncrementField);
+        Map<String, String> map = setUseGeneratedKeysAndKeyProperty(autoIncrementField,"insert");
         useGeneratedKeysString = map.get("useGeneratedKeysString");
         keyPropertyString = map.get("keyPropertyString");
 
@@ -508,21 +504,25 @@ public class XMLBuilder {
 
     /**
      * @param autoIncrementField
+     * @param methodName 不同的方法对应的keyProperty不同
      * @return java.util.Map<java.lang.String, java.lang.String>
      * @description: 设置是否主键回显
      * @author liuhd
      * 2025/2/2 22:13
      */
-    private static Map<String, String> setUseGeneratedKeysAndKeyProperty(FieldInfo autoIncrementField) {
+    private static Map<String, String> setUseGeneratedKeysAndKeyProperty(FieldInfo autoIncrementField,String methodName) {
         Map<String, String> map = new HashMap<>();
         if (autoIncrementField != null) {
             map.put("useGeneratedKeysString", String.format("useGeneratedKeys=\"%s\"", "true"));
-            map.put("keyPropertyString", String.format("keyProperty=\"%s\"", autoIncrementField.getPropertyName()));
+            if (methodName.contains("Batch")){
+                map.put("keyPropertyString", String.format("keyProperty=\"%s\"", autoIncrementField.getPropertyName()));
+            }else{
+                map.put("keyPropertyString", String.format("keyProperty=\"bean.%s\"", autoIncrementField.getPropertyName()));
+            }
         } else {
             map.put("useGeneratedKeysString", "");
             map.put("keyPropertyString", "");
         }
         return map;
     }
-
 }
