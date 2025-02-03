@@ -97,9 +97,9 @@ public class XMLBuilder {
             // 构建insertOrUpdateBatch方法
             buildInsertOrUpdateBatch(tableInfo,bw);
             // 构建多条件更新方法
-            buildUpdateByParam(tableInfo,bw);
+            buildUpdateByQuery(tableInfo,bw);
             // 构建多条件删除方法
-            buildDeleteByParam(tableInfo,bw);
+            buildDeleteByQuery(tableInfo,bw);
             // 构建唯一索引的select方法
             buildUniqueIndexSelect(tableInfo,bw);
             // 构建唯一索引的delete方法
@@ -244,9 +244,9 @@ public class XMLBuilder {
      * @author liuhd
      * 2025/2/3 19:48
      */
-    private static void buildDeleteByParam(TableInfo tableInfo, BufferedWriter bw) throws IOException {
+    private static void buildDeleteByQuery(TableInfo tableInfo, BufferedWriter bw) throws IOException {
         CommentBuilder.buildXMLFieldComment(bw,"多条件删除");
-        bw.write(String.format("\t<delete id=\"deleteByParam\">\n" +
+        bw.write(String.format("\t<delete id=\"deleteByQuery\">\n" +
                 "\t\tdelete from %s %s\n" +
                 "\t\t<include refid=\"%s\"/>\n" +
                 "\t</delete>",tableInfo.getTableName(),alias,BASE_QUERY_CONDITION));
@@ -262,9 +262,9 @@ public class XMLBuilder {
      * @author liuhd
      * 2025/2/3 19:18
      */
-    private static void buildUpdateByParam(TableInfo tableInfo, BufferedWriter bw) throws IOException {
+    private static void buildUpdateByQuery(TableInfo tableInfo, BufferedWriter bw) throws IOException {
         CommentBuilder.buildXMLFieldComment(bw,"多条件更新方法");
-        bw.write("\t<update id=\"updateByParam\">");
+        bw.write("\t<update id=\"updateByQuery\">");
         bw.newLine();
 
         bw.write(String.format("\t\tUPDATE %s %s",tableInfo.getTableName(),alias));
@@ -282,8 +282,8 @@ public class XMLBuilder {
                     "\t\t\t\t%s = #{bean.%s},\n" +
                     "\t\t\t</if>\n",fieldInfo.getPropertyName(),fieldInfo.getFieldName(),fieldInfo.getPropertyName()));
         }
-        sb.append(String.format("\t\t<include refid=\"%s\"/>\n",BASE_QUERY_CONDITION));
-        sb.append("\t\t</set>");
+        sb.append("\t\t</set>\n");
+        sb.append(String.format("\t\t<include refid=\"%s\"/>",BASE_QUERY_CONDITION));
 
         bw.write(sb.toString());
         bw.newLine();
