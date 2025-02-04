@@ -24,6 +24,7 @@ public class RunApplication {
             MapperBuilder.execute(tableInfo);
             XMLBuilder.execute(tableInfo);
             ServiceBuilder.execute(tableInfo);
+            ServiceImplBuilder.execute(tableInfo);
         }
     }
 }

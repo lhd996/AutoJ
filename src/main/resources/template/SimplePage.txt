@@ -1,26 +1,26 @@
 public class SimplePage {
 	// 页号
-	private int pageNo;
+	private long pageNo;
 
 	// 查询结果中有多少条记录 通过它算出结果有多少页
-	private int resultCount;
+	private long resultCount;
 
 	// 一页多大
-	private int pageSize;
+	private long pageSize;
 
 	// 总共查出来多少页
-	private int pageTotal;
+	private long pageTotal;
 
 	// limit的起始索引
-	private int start;
+	private long start;
 
 	// limit的偏移量
-	private int end;
+	private long end;
 
 	public SimplePage() {
 	}
 
-	public SimplePage(Integer pageNo, int resultCount, int pageSize) {
+	public SimplePage(long pageNo, long resultCount, long pageSize) {
 		if (null == pageNo) {
 			pageNo = 0;
 		}
@@ -30,7 +30,7 @@ public class SimplePage {
 		action();
 	}
 
-	public SimplePage(int start, int end) {
+	public SimplePage(long start, long end) {
 		this.start = start;
 		this.end = end;
 	}
@@ -59,52 +59,52 @@ public class SimplePage {
 		this.end = this.pageSize;
 	}
 
-	public int getPageNo() {
+	public long getPageNo() {
 		return pageNo;
 	}
 
-	public void setPageNo(int pageNo) {
+	public void setPageNo(long pageNo) {
 		this.pageNo = pageNo;
 	}
 
-	public int getResultCount() {
+	public long getResultCount() {
 		return resultCount;
 	}
 
-	public void setResultCount(int resultCount) {
+	public void setResultCount(long resultCount) {
 		this.resultCount = resultCount;
 		this.action();
 	}
 
-	public int getPageSize() {
+	public long getPageSize() {
 		return pageSize;
 	}
 
-	public void setPageSize(int pageSize) {
+	public void setPageSize(long pageSize) {
 		this.pageSize = pageSize;
 	}
 
-	public int getPageTotal() {
+	public long getPageTotal() {
 		return pageTotal;
 	}
 
-	public void setPageTotal(int pageTotal) {
+	public void setPageTotal(long pageTotal) {
 		this.pageTotal = pageTotal;
 	}
 
-	public int getStart() {
+	public long getStart() {
 		return start;
 	}
 
-	public void setStart(int start) {
+	public void setStart(long start) {
 		this.start = start;
 	}
 
-	public int getEnd() {
+	public long getEnd() {
 		return end;
 	}
 
-	public void setEnd(int end) {
+	public void setEnd(long end) {
 		this.end = end;
 	}
 }

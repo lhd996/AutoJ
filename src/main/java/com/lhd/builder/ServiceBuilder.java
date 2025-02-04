@@ -71,7 +71,7 @@ public class ServiceBuilder {
             bw.newLine();
 
             CommentBuilder.buildMethodComment(bw,"根据条件查询数量");
-            bw.write(String.format("\tInteger findCountByQuery(%s query);",queryName));
+            bw.write(String.format("\tLong findCountByQuery(%s query);",queryName));
             bw.newLine();
             bw.newLine();
 
@@ -81,22 +81,32 @@ public class ServiceBuilder {
             bw.newLine();
 
             CommentBuilder.buildMethodComment(bw,"新增");
-            bw.write(String.format("\tInteger add(%s bean);",tableInfo.getBeanName()));
+            bw.write(String.format("\tLong add(%s bean);",tableInfo.getBeanName()));
+            bw.newLine();
+            bw.newLine();
+
+            CommentBuilder.buildMethodComment(bw,"新增或更新");
+            bw.write(String.format("\tLong addOrUpdate(%s bean);",tableInfo.getBeanName()));
             bw.newLine();
             bw.newLine();
 
             CommentBuilder.buildMethodComment(bw,"批量新增");
-            bw.write(String.format("\tInteger addOrUpdateBatch(List<%s> listBean);",tableInfo.getBeanName()));
+            bw.write(String.format("\tLong addBatch(List<%s> listBean);",tableInfo.getBeanName()));
+            bw.newLine();
+            bw.newLine();
+
+            CommentBuilder.buildMethodComment(bw,"批量新增或修改");
+            bw.write(String.format("\tLong addOrUpdateBatch(List<%s> listBean);",tableInfo.getBeanName()));
             bw.newLine();
             bw.newLine();
 
             CommentBuilder.buildMethodComment(bw,"多条件更新");
-            bw.write(String.format("\tInteger updateByQuery(%s bean, %s query);",tableInfo.getBeanName(),queryName));
+            bw.write(String.format("\tLong updateByQuery(%s bean, %s query);",tableInfo.getBeanName(),queryName));
             bw.newLine();
             bw.newLine();
 
             CommentBuilder.buildMethodComment(bw,"多条件删除");
-            bw.write(String.format("\tInteger deleteByQuery(%s query);",queryName));
+            bw.write(String.format("\tLong deleteByQuery(%s query);",queryName));
             bw.newLine();
             bw.newLine();
 
@@ -125,7 +135,7 @@ public class ServiceBuilder {
 
                 // delete
                 CommentBuilder.buildMethodComment(bw,String.format("根据%s删除",keyName));
-                bw.write(String.format("\tInteger delete%sBy%s(%s);",tableInfo.getBeanName(),methodNameSuffix,paramList));
+                bw.write(String.format("\tLong delete%sBy%s(%s);",tableInfo.getBeanName(),methodNameSuffix,paramList));
                 bw.newLine();
                 bw.newLine();
 
@@ -135,7 +145,7 @@ public class ServiceBuilder {
                 paramList = head.append(paramList);
 
                 CommentBuilder.buildMethodComment(bw,String.format("根据%s更新",keyName));
-                bw.write(String.format("\tInteger update%sBy%s(%s);",tableInfo.getBeanName(),methodNameSuffix,paramList));
+                bw.write(String.format("\tLong update%sBy%s(%s);",tableInfo.getBeanName(),methodNameSuffix,paramList));
                 bw.newLine();
                 bw.newLine();
 
@@ -147,7 +157,9 @@ public class ServiceBuilder {
             logger.error("Service类创建异常");
         } finally {
             try {
-                bw.close();
+                if (bw != null) {
+                    bw.close();
+                }
             } catch (IOException e) {
                 logger.error("BufferedWriter关流失败");
             }

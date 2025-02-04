@@ -80,7 +80,7 @@ public class MapperBuilder {
                 if (solution.equals("update")) {
                     for (Map.Entry<String, List<FieldInfo>> entry : keyIndexMap.entrySet()) {
                         sb = new StringBuilder();
-                        sb.append("\tInteger updateBy");
+                        sb.append("\tLong updateBy");
 
                         List<FieldInfo> indexList = entry.getValue();
                         joinMethodName(sb, indexList);
@@ -97,7 +97,7 @@ public class MapperBuilder {
                 if (solution.equals("delete")) {
                     for (Map.Entry<String, List<FieldInfo>> entry : keyIndexMap.entrySet()) {
                         sb = new StringBuilder();
-                        sb.append("\tInteger deleteBy");
+                        sb.append("\tLong deleteBy");
                         List<FieldInfo> indexList = entry.getValue();
                         joinMethodName(sb, indexList);
                         joinParam(sb, indexList);
