@@ -32,14 +32,4 @@ public class StringTools {
         if (len < 0 || len > str.length()) return "长度异常！！！！！";
         return str.substring(0, len).toLowerCase() + str.substring(len);
     }
-
-    public static void main(String[] args) {
-        System.out.println(UpperHead("acdscsvAFcevw", 1));
-        System.out.println(UpperHead("acdscsvAFcevw", 2));
-        System.out.println(UpperHead("acdscsvAFcevw", 3));
-
-        System.out.println(lowerHead("ABCecev", 2));
-        System.out.println(lowerHead("aBc", 3));
-        System.out.println(lowerHead("abCC", 3));
-    }
 }

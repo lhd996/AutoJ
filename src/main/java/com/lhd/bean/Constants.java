@@ -159,19 +159,4 @@ public class Constants {
 
     //Long
     public static final String[] SQL_LONG_TYPE = new String[]{"bigint"};
-
-    public static void main(String[] args) {
-        System.out.println(MAPPER_BEAN_SUFFIX);
-        System.out.println(PACKAGE_PO);
-        System.out.println(PATH_QUERY);
-        System.out.println(PATH_ENUM);
-        System.out.println(PATH_PO);
-        System.out.println(PATH_VO);
-        System.out.println(PATH_EXCEPTION);
-        System.out.println(PATH_UTILS);
-        System.out.println(PATH_MAPPERS);
-        System.out.println(PATH_XML);
-        System.out.println(PATH_SERVICE);
-        System.out.println(PATH_SERVICEIMPL);
-    }
 }
