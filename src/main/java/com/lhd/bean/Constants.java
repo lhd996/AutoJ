@@ -15,6 +15,10 @@ public class Constants {
 
     // Mapper的后缀
     public static String MAPPER_BEAN_SUFFIX;
+    // Service类的后缀
+    public static String SERVICE_BEAN_SUFFIX;
+    // ServiceImpl的后缀
+    public static String SERVICEIMPL_BEAN_SUFFIX;
 
     // 文件输出地址
     public static String PATH_BASE;
@@ -58,6 +62,14 @@ public class Constants {
     public static String PATH_MAPPERS;
     // mappers类所在包
     public static String PACKAGE_MAPPERS;
+    // service接口所在路径
+    public static String PATH_SERVICE;
+    // service接口所在包
+    public static String PACKAGE_SERVICE;
+    // serviceImpl实现类所在路径
+    public static String PATH_SERVICEIMPL;
+    // serviceImpl所在包
+    public static String PACKAGE_SERVICEIMPL;
     // XML所在路径
     public static String PATH_XML;
     // 作者名
@@ -72,6 +84,10 @@ public class Constants {
         QUERY_BEAN_SUFFIX = PropertiesUtils.getString("query.bean.suffix");
 
         MAPPER_BEAN_SUFFIX = PropertiesUtils.getString("mapper.bean.suffix");
+
+        SERVICE_BEAN_SUFFIX = PropertiesUtils.getString("service.bean.suffix");
+
+        SERVICEIMPL_BEAN_SUFFIX = PropertiesUtils.getString("serviceImpl.bean.suffix");
 
         PATH_BASE = PropertiesUtils.getString("path.base");
 
@@ -109,6 +125,14 @@ public class Constants {
 
         PATH_MAPPERS = PATH_BASE + PATH_JAVA + PACKAGE_MAPPERS.replace(".","/");
 
+        PACKAGE_SERVICE = PACKAGE_BASE + "." + PropertiesUtils.getString("package.service");
+
+        PATH_SERVICE = PATH_BASE + PATH_JAVA + PACKAGE_SERVICE.replace(".","/");
+
+        PACKAGE_SERVICEIMPL = PACKAGE_BASE + "." + PropertiesUtils.getString("package.service.impl");
+
+        PATH_SERVICEIMPL = PATH_BASE + PATH_JAVA + PACKAGE_SERVICEIMPL.replace(".","/");
+
         PATH_XML = PATH_BASE + PATH_RESOURCES + PACKAGE_MAPPERS.replace(".","/");
 
         AUTHOR = PropertiesUtils.getString("author");
@@ -143,5 +167,7 @@ public class Constants {
         System.out.println(PATH_UTILS);
         System.out.println(PATH_MAPPERS);
         System.out.println(PATH_XML);
+        System.out.println(PATH_SERVICE);
+        System.out.println(PATH_SERVICEIMPL);
     }
 }

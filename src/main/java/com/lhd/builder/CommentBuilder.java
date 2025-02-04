@@ -51,7 +51,6 @@ public class CommentBuilder {
             bw.newLine();
             bw.write("\t */");
             bw.newLine();
-            bw.newLine();
         } catch (IOException e) {
             logger.error("方法描述生成失败",e);
         }

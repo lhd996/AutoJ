@@ -23,6 +23,7 @@ public class RunApplication {
             QueryBuilder.execute(tableInfo);
             MapperBuilder.execute(tableInfo);
             XMLBuilder.execute(tableInfo);
+            ServiceBuilder.execute(tableInfo);
         }
     }
 }
