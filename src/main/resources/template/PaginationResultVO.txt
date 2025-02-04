@@ -1,24 +1,29 @@
 import java.util.ArrayList;
 import java.util.List;
 public class PaginationResultVO<T> {
-	private Long totalCount;
+	// 总查询结果数
+	private Long resultCount;
+	// 一页大小
 	private Long pageSize;
+	// 页号
 	private Long pageNo;
+	// 总共多少页
 	private Long pageTotal;
-	private List<T> list = new ArrayList<T>();
+	// 结果集
+	private List<T> list = new ArrayList<>();
 
-	public PaginationResultVO(Long totalCount, Long pageSize, Long pageNo, List<T> list) {
-		this.totalCount = totalCount;
+	public PaginationResultVO(Long resultCount, Long pageSize, Long pageNo, List<T> list) {
+		this.resultCount = resultCount;
 		this.pageSize = pageSize;
 		this.pageNo = pageNo;
 		this.list = list;
 	}
 
-    public PaginationResultVO(Long totalCount, Long pageSize, Long pageNo, Long pageTotal, List<T> list) {
+    public PaginationResultVO(Long resultCount, Long pageSize, Long pageNo, Long pageTotal, List<T> list) {
         if (pageNo == 0) {
-            pageNo = 1;
+            pageNo = 1L;
         }
-        this.totalCount = totalCount;
+        this.resultCount = resultCount;
         this.pageSize = pageSize;
         this.pageNo = pageNo;
         this.pageTotal = pageTotal;
@@ -33,12 +38,12 @@ public class PaginationResultVO<T> {
 
 	}
 
-	public Long getTotalCount() {
-		return totalCount;
+	public Long getResultCount() {
+		return resultCount;
 	}
 
-	public void setTotalCount(Long totalCount) {
-		this.totalCount = totalCount;
+	public void setResultCount(Long resultCount) {
+		this.resultCount = resultCount;
 	}
 
 	public Long getPageSize() {

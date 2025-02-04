@@ -10,7 +10,7 @@ public class BusinessException extends RuntimeException {
         super(message, e);
         this.message = message;
     }
-
+    // 常用
     public BusinessException(String message) {
         super(message);
         this.message = message;

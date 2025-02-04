@@ -9,6 +9,35 @@ public class DateUtil {
     private static final Object lockObj = new Object();
     private static Map<String, ThreadLocal<SimpleDateFormat>> sdfMap = new HashMap<String, ThreadLocal<SimpleDateFormat>>();
 
+    /**
+     * @description: 将日期转成字符串
+     * @param date
+     * @param pattern
+     * @return java.lang.String
+     * @author liuhd
+     * 2025/2/4 19:47
+     */
+    public static String format(Date date, String pattern) {
+        return getSdf(pattern).format(date);
+    }
+
+    /**
+     * @description: 将字符串解析成日期
+     * @param dateStr
+     * @param pattern
+     * @return java.util.Date
+     * @author liuhd
+     * 2025/2/4 19:47
+     */
+    public static Date parse(String dateStr, String pattern) {
+        try {
+            return getSdf(pattern).parse(dateStr);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return new Date();
+    }
+
     private static SimpleDateFormat getSdf(final String pattern) {
         ThreadLocal<SimpleDateFormat> tl = sdfMap.get(pattern);
         if (tl == null) {
@@ -27,18 +56,5 @@ public class DateUtil {
         }
 
         return tl.get();
-    }
-
-    public static String format(Date date, String pattern) {
-        return getSdf(pattern).format(date);
-    }
-
-    public static Date parse(String dateStr, String pattern) {
-        try {
-            return getSdf(pattern).parse(dateStr);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        return new Date();
     }
 }

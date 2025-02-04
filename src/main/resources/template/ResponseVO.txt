@@ -1,7 +1,11 @@
 public class ResponseVO<T> {
+    // 成功或者失败
     private String status;
+    // 状态码
     private Integer code;
+    // 附加信息
     private String info;
+    // 具体数据
     private T data;
 
     public String getStatus() {
