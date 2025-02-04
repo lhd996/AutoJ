@@ -26,6 +26,7 @@ public class RunApplication {
             ServiceBuilder.execute(tableInfo);
             ServiceImplBuilder.execute(tableInfo);
             ControllerBuilder.execute(tableInfo);
+            System.out.println("表" + tableInfo.getTableName() + "相关代码生成成功");
         }
     }
 }

@@ -42,13 +42,6 @@ public class XMLBuilder {
         }
         // 找到自增字段
         autoIncrementField = null;
-        for (FieldInfo fieldInfo : tableInfo.getFieldList()) {
-            if (fieldInfo.getAutoIncrement()) {
-                autoIncrementField = fieldInfo;
-                System.out.println(tableInfo.getTableName() + ":" + fieldInfo.getPropertyName());
-                break;
-            }
-        }
         // 找到主键
         primaryList = null;
         Map<String, List<FieldInfo>> keyIndexMap = tableInfo.getKeyIndexMap();
