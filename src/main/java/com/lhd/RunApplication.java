@@ -25,6 +25,7 @@ public class RunApplication {
             XMLBuilder.execute(tableInfo);
             ServiceBuilder.execute(tableInfo);
             ServiceImplBuilder.execute(tableInfo);
+            ControllerBuilder.execute(tableInfo);
         }
     }
 }

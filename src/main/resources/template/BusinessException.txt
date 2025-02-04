@@ -6,20 +6,13 @@ public class BusinessException extends RuntimeException {
 
     private String message;
 
-    public BusinessException(String message, Throwable e) {
-        super(message, e);
-        this.message = message;
-    }
     // 常用
     public BusinessException(String message) {
         super(message);
         this.message = message;
     }
 
-    public BusinessException(Throwable e) {
-        super(e);
-    }
-
+    // 常用
     public BusinessException(ResponseCodeEnum codeEnum) {
         super(codeEnum.getMsg());
         this.codeEnum = codeEnum;
@@ -27,11 +20,6 @@ public class BusinessException extends RuntimeException {
         this.message = codeEnum.getMsg();
     }
 
-    public BusinessException(Integer code, String message) {
-        super(message);
-        this.code = code;
-        this.message = message;
-    }
 
     public ResponseCodeEnum getCodeEnum() {
         return codeEnum;

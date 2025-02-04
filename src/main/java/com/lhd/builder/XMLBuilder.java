@@ -148,7 +148,7 @@ public class XMLBuilder {
                         "\t\t\t\t%s = #{bean.%s},\n" +
                         "\t\t\t</if>\n",fieldInfo.getPropertyName(),fieldInfo.getFieldName(),fieldInfo.getPropertyName()));
             }
-            CommentBuilder.buildXMLFieldComment(bw,String.format("根据%s更新",keyName));
+            CommentBuilder.builderXMLComment(bw,String.format("根据%s更新",keyName));
 
             bw.write(String.format("\t<update id=\"updateBy%s\">\n" +
                     "\t\tUPDATE %s\n" +
@@ -188,7 +188,7 @@ public class XMLBuilder {
                 sb.append(indexList.get(i).getFieldName()).append(" = ").append(String.format("#{%s}",indexList.get(i).getPropertyName())).append(tail);
             }
 
-            CommentBuilder.buildXMLFieldComment(bw,String.format("根据%s删除",keyName));
+            CommentBuilder.builderXMLComment(bw,String.format("根据%s删除",keyName));
             bw.write(String.format("\t<delete id=\"deleteBy%s\">\n" +
                     "\t\tdelete\n" +
                     "\t\tfrom %s where %s\n" +
@@ -225,7 +225,7 @@ public class XMLBuilder {
                 sb.append(indexList.get(i).getFieldName()).append(" = ").append(String.format("#{%s}",indexList.get(i).getPropertyName())).append(tail);
             }
 
-            CommentBuilder.buildXMLFieldComment(bw,String.format("根据%s查询",keyName));
+            CommentBuilder.builderXMLComment(bw,String.format("根据%s查询",keyName));
             bw.write(String.format("\t<select id=\"selectBy%s\" resultMap=\"%s\">\n" +
                     "\t\tselect\n" +
                     "\t\t<include refid=\"%s\"/>\n" +
@@ -245,7 +245,7 @@ public class XMLBuilder {
      * 2025/2/3 19:48
      */
     private static void buildDeleteByQuery(TableInfo tableInfo, BufferedWriter bw) throws IOException {
-        CommentBuilder.buildXMLFieldComment(bw,"多条件删除");
+        CommentBuilder.builderXMLComment(bw,"多条件删除");
         bw.write(String.format("\t<delete id=\"deleteByQuery\">\n" +
                 "\t\tdelete from %s %s\n" +
                 "\t\t<include refid=\"%s\"/>\n" +
@@ -263,7 +263,7 @@ public class XMLBuilder {
      * 2025/2/3 19:18
      */
     private static void buildUpdateByQuery(TableInfo tableInfo, BufferedWriter bw) throws IOException {
-        CommentBuilder.buildXMLFieldComment(bw,"多条件更新方法");
+        CommentBuilder.builderXMLComment(bw,"多条件更新方法");
         bw.write("\t<update id=\"updateByQuery\">");
         bw.newLine();
 
@@ -302,7 +302,7 @@ public class XMLBuilder {
      * 2025/2/3 18:47
      */
     private static void buildInsertOrUpdateBatch(TableInfo tableInfo, BufferedWriter bw) throws IOException {
-        CommentBuilder.buildXMLFieldComment(bw,"批量新增或修改");
+        CommentBuilder.builderXMLComment(bw,"批量新增或修改");
 
         String useGeneratedKeysString = "";
         String keyPropertyString = "";
@@ -388,7 +388,7 @@ public class XMLBuilder {
         useGeneratedKeysString = map.get("useGeneratedKeysString");
         keyPropertyString = map.get("keyPropertyString");
 
-        CommentBuilder.buildXMLFieldComment(bw, "批量插入");
+        CommentBuilder.builderXMLComment(bw, "批量插入");
         bw.write(String.format("\t<insert id=\"insertBatch\" parameterType=\"%s.%s\" %s %s>",
                 Constants.PACKAGE_PO, tableInfo.getBeanName(), useGeneratedKeysString, keyPropertyString));
         bw.newLine();
@@ -454,7 +454,7 @@ public class XMLBuilder {
         keyPropertyString = map.get("keyPropertyString");
 
 
-        CommentBuilder.buildXMLFieldComment(bw, "插入或者更新 （只插入或更新bean中有值的字段）");
+        CommentBuilder.builderXMLComment(bw, "插入或者更新 （只插入或更新bean中有值的字段）");
         bw.write(String.format("\t<insert id=\"insertOrUpdate\" parameterType=\"%s.%s\" %s %s>",
                 Constants.PACKAGE_PO,
                 tableInfo.getBeanName(),
@@ -534,7 +534,7 @@ public class XMLBuilder {
         useGeneratedKeysString = map.get("useGeneratedKeysString");
         keyPropertyString = map.get("keyPropertyString");
 
-        CommentBuilder.buildXMLFieldComment(bw, "插入 （只插入bean中有值的字段）");
+        CommentBuilder.builderXMLComment(bw, "插入 （只插入bean中有值的字段）");
         bw.write(String.format("\t<insert id=\"insert\" parameterType=\"%s.%s\" %s %s>",
                 Constants.PACKAGE_PO,
                 tableInfo.getBeanName(),
@@ -653,7 +653,7 @@ public class XMLBuilder {
             if (primaryNameList.contains(fieldInfo.getPropertyName())) {
                 head = "id";
             }
-            CommentBuilder.buildXMLFieldComment(bw, fieldInfo.getComment());
+            CommentBuilder.builderXMLComment(bw, fieldInfo.getComment());
             bw.write(String.format("\t\t<%s column=\"%s\" property=\"%s\"/>", head, fieldInfo.getFieldName(), fieldInfo.getPropertyName()));
             bw.newLine();
         }

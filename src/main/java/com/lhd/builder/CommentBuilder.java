@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
@@ -32,7 +31,7 @@ public class CommentBuilder {
         }
     }
 
-    public static void buildXMLFieldComment(BufferedWriter bw,String comment){
+    public static void builderXMLComment(BufferedWriter bw, String comment){
         if (StringUtils.isEmpty(comment)) return;
         try {
             bw.write(String.format("\t<!-- %s -->",comment));

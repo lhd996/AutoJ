@@ -19,6 +19,8 @@ public class Constants {
     public static String SERVICE_BEAN_SUFFIX;
     // ServiceImpl的后缀
     public static String SERVICEIMPL_BEAN_SUFFIX;
+    // Controller后缀
+    public static String CONTROLLER_BEAN_SUFFIX;
 
     // 文件输出地址
     public static String PATH_BASE;
@@ -88,6 +90,8 @@ public class Constants {
         SERVICE_BEAN_SUFFIX = PropertiesUtils.getString("service.bean.suffix");
 
         SERVICEIMPL_BEAN_SUFFIX = PropertiesUtils.getString("serviceImpl.bean.suffix");
+
+        CONTROLLER_BEAN_SUFFIX = PropertiesUtils.getString("controller.bean.suffix");
 
         PATH_BASE = PropertiesUtils.getString("path.base");
 
