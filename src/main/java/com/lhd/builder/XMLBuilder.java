@@ -8,10 +8,9 @@ import com.lhd.utils.StringTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -41,7 +40,12 @@ public class XMLBuilder {
             folder.mkdirs();
         }
         // 找到自增字段
-        autoIncrementField = null;
+        tableInfo.getFieldList().forEach(item -> {
+            if (item.getAutoIncrement()) {
+                autoIncrementField = item;
+            }
+        });
+        System.out.println(autoIncrementField);
         // 找到主键
         primaryList = null;
         Map<String, List<FieldInfo>> keyIndexMap = tableInfo.getKeyIndexMap();
@@ -61,7 +65,7 @@ public class XMLBuilder {
         File xml = new File(folder, xmlName + ".xml");
         BufferedWriter bw = null;
         try {
-            bw = new BufferedWriter(new FileWriter(xml));
+            bw = new BufferedWriter(new OutputStreamWriter(Files.newOutputStream(xml.toPath()), StandardCharsets.UTF_8));
 
             bw.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                     "<!DOCTYPE mapper PUBLIC \"-//mybatis.org//DTD Mapper 3.0//EN\"\n" +

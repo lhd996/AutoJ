@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 
@@ -32,7 +34,7 @@ public class QueryBuilder {
         BufferedWriter bw = null;
         try {
             // 1. package import
-            bw = new BufferedWriter(new FileWriter(queryFile));
+            bw = new BufferedWriter(new OutputStreamWriter(Files.newOutputStream(queryFile.toPath()), StandardCharsets.UTF_8));
             bw.write("package " + Constants.PACKAGE_QUERY + ";");
             bw.newLine();
             bw.newLine();

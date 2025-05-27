@@ -6,10 +6,9 @@ import com.lhd.utils.StringTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
 /**
  * @Author: liuhd
@@ -28,7 +27,7 @@ public class ControllerBuilder {
         BufferedWriter bw = null;
         String serviceName = tableInfo.getBeanName() + Constants.SERVICE_BEAN_SUFFIX;
         try {
-            bw = new BufferedWriter(new FileWriter(controllerFile));
+            bw = new BufferedWriter(new OutputStreamWriter(Files.newOutputStream(controllerFile.toPath()), StandardCharsets.UTF_8));
             // package
             bw.write("package " + Constants.PACKAGE_CONTROLLER + ";");
             bw.newLine();

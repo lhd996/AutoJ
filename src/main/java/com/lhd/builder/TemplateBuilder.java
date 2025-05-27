@@ -5,6 +5,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -82,10 +84,12 @@ public class TemplateBuilder {
             }
             File enumFile = new File(folder, fileName + ".java");
             // 输出流
-            bw = new BufferedWriter(new FileWriter(enumFile));
+            bw = new BufferedWriter(new OutputStreamWriter(Files.newOutputStream(enumFile.toPath()), StandardCharsets.UTF_8));
             // 输入流
             is = TemplateBuilder.class.getClassLoader().getResourceAsStream("template/" + fileName + ".txt");
-            br = new BufferedReader(new InputStreamReader(is));
+            if (is != null) {
+                br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+            }
 
             // 写入头
             if (!fileHeadList.isEmpty()){

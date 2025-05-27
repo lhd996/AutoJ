@@ -7,10 +7,9 @@ import com.lhd.utils.StringTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 
@@ -34,7 +33,7 @@ public class ServiceImplBuilder {
 
         BufferedWriter bw = null;
         try {
-            bw = new BufferedWriter(new FileWriter(serviceFile));
+            bw = new BufferedWriter(new OutputStreamWriter(Files.newOutputStream(serviceFile.toPath()), StandardCharsets.UTF_8));
             // package
             bw.write("package " + Constants.PACKAGE_SERVICEIMPL + ";");
             bw.newLine();
